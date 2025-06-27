@@ -6,19 +6,11 @@ interface HeaderProps {
   onAboutClick?: () => void;
   onPricingClick?: () => void;
   onBlogsClick?: () => void;
-  showAbout?: boolean;
-  showPricing?: boolean;
 }
 
 const logoblack = 'https://raw.githubusercontent.com/Etherlabs-dev/studypalassets/refs/heads/main/1.png';
 
-export const Header = ({ 
-  onAboutClick, 
-  onPricingClick, 
-  onBlogsClick, 
-  showAbout = false, 
-  showPricing = false 
-}: HeaderProps): JSX.Element => {
+export const Header = ({ onAboutClick, onPricingClick, onBlogsClick }: HeaderProps): JSX.Element => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const toggleMenu = () => {
@@ -43,22 +35,18 @@ export const Header = ({
           
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            {showAbout && (
-              <button 
-                onClick={onAboutClick} 
-                className="text-gray-600 hover:text-gray-900 text-left"
-              >
-                About Us
-              </button>
-            )}
-            {showPricing && (
-              <button 
-                onClick={onPricingClick}
-                className="text-gray-600 hover:text-gray-900 text-left"
-              >
-                Pricing
-              </button>
-            )}
+            <button 
+              onClick={onAboutClick} 
+              className="text-gray-600 hover:text-gray-900 text-left"
+            >
+              About Us
+            </button>
+            <button 
+              onClick={onPricingClick}
+              className="text-gray-600 hover:text-gray-900 text-left"
+            >
+              Pricing
+            </button>
             <button 
               onClick={onBlogsClick}
               className="text-gray-600 hover:text-gray-900 text-left"
@@ -113,22 +101,18 @@ export const Header = ({
           }`}
         >
           <div className="flex flex-col space-y-4">
-            {showAbout && (
-              <button 
-                onClick={onAboutClick} 
-                className="text-gray-600 hover:text-gray-900 py-2 text-left"
-              >
-                About Us
-              </button>
-            )}
-            {showPricing && (
-              <button 
-                onClick={onPricingClick}
-                className="text-gray-600 hover:text-gray-900 py-2 text-left"
-              >
-                Pricing
-              </button>
-            )}
+            <button 
+              onClick={onAboutClick} 
+              className="text-gray-600 hover:text-gray-900 py-2 text-left"
+            >
+              About Us
+            </button>
+            <button 
+              onClick={onPricingClick}
+              className="text-gray-600 hover:text-gray-900 py-2 text-left"
+            >
+              Pricing
+            </button>
             <button 
               onClick={onBlogsClick}
               className="text-gray-600 hover:text-gray-900 py-2 text-left"
