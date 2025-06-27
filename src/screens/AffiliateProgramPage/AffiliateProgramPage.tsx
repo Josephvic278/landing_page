@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
+import { Header } from "../../components/ui/header";
 import { UserPlus, Share2, Gift, ChevronDown, ChevronUp, Plus } from "lucide-react";
 const logowhite = 'https://raw.githubusercontent.com/Etherlabs-dev/studypalassets/refs/heads/main/2.png'
 const logoblack = 'https://raw.githubusercontent.com/Etherlabs-dev/studypalassets/refs/heads/main/1.png'
@@ -68,32 +69,11 @@ export const AffiliateProgramPage = (): JSX.Element => {
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="w-full bg-white border-b border-gray-200">
-        <div className="container mx-auto px-4 py-4">
-          <nav className="flex items-center justify-between">
-            <Link to="/">
-              <img src={logoblack} className="h-8" />
-            </Link>
-            <div className="hidden md:flex items-center space-x-8">
-              <Link to="#" className="text-gray-600 hover:text-gray-900">About Us</Link>
-              <Link to="#" className="text-gray-600 hover:text-gray-900">Pricing</Link>
-              <Link to="/blogs" className="text-gray-600 hover:text-gray-900">Blogs</Link>
-              <Link to="/affiliate-program" className="text-gray-600 hover:text-gray-900">Affiliate Program</Link>
-              <Link to="/contact" className="text-gray-600 hover:text-gray-900">Contact Us</Link>
-              <Link to="/marking-service" className="text-gray-600 hover:text-gray-900">Marking Services</Link>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Button variant="outline" className="border-primary-500 text-primary-500">
-                Sign Up
-              </Button>
-              <Button className="bg-primary-500 text-white">
-                Sign In
-              </Button>
-            </div>
-          </nav>
-        </div>
-      </header>
-
+      <Header 
+        onAboutClick={scrollToAbout} 
+        onPricingClick={scrollToPricing}
+        onBlogsClick={scrollToBlogs}
+      />
       {/* Breadcrumb */}
       <div className="bg-gray-50 py-4">
         <div className="container mx-auto px-4">
