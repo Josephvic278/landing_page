@@ -1,15 +1,18 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
+import { Header } from "../../components/ui/header";
+
 const image = 'https://raw.githubusercontent.com/Etherlabs-dev/studypalassets/refs/heads/main/image.png'
 const logoblack = 'https://raw.githubusercontent.com/Etherlabs-dev/studypalassets/refs/heads/main/1.png'
 const profile_pic = 'https://raw.githubusercontent.com/Etherlabs-dev/studypalassets/refs/heads/main/profile-pic.png'
 const image_2 = 'https://raw.githubusercontent.com/Etherlabs-dev/studypalassets/refs/heads/main/image-2.png'
 const image_1 = 'https://raw.githubusercontent.com/Etherlabs-dev/studypalassets/refs/heads/main/image-1.png'
 const logowhite = 'https://raw.githubusercontent.com/Etherlabs-dev/studypalassets/refs/heads/main/2.png'
+
 // Blog post data
 const blogPosts = [
   {
@@ -105,34 +108,21 @@ const blogPosts = [
 ];
 
 export const BlogPage = (): JSX.Element => {
+  const navigate = useNavigate();
+
+  // Navigation handlers for Header component
+  const handleAboutClick = () => navigate('/about');
+  const handlePricingClick = () => navigate('/pricing');
+  const handleBlogsClick = () => navigate('/blogs');
+
   return (
     <div className="min-h-screen bg-white">
-      {/* Header with navigation */}
-      <header className="w-full bg-white border-b border-gray-200">
-        <div className="container mx-auto px-4 py-4">
-          <nav className="flex items-center justify-between">
-            <Link to="/">
-              <img src={logoblack} alt="My Study Pal" className="h-8" />
-            </Link>
-            <div className="hidden md:flex items-center space-x-8">
-              <Link to="#" className="text-gray-600 hover:text-gray-900">About Us</Link>
-              <Link to="#" className="text-gray-600 hover:text-gray-900">Pricing</Link>
-              <Link to="/blogs" className="text-gray-600 hover:text-gray-900">Blogs</Link>
-              <Link to="/affiliate-program" className="text-gray-600 hover:text-gray-900">Affiliate Program</Link>
-              <Link to="/contact" className="text-gray-600 hover:text-gray-900">Contact Us</Link>
-              <Link to="/marking-service" className="text-gray-600 hover:text-gray-900">Marking Services</Link>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Button variant="outline" className="border-primary-500 text-primary-500">
-                Sign Up
-              </Button>
-              <Button className="bg-primary-500 text-white">
-                Sign In
-              </Button>
-            </div>
-          </nav>
-        </div>
-      </header>
+      {/* Header Component */}
+      <Header 
+        onAboutClick={handleAboutClick}
+        onPricingClick={handlePricingClick}
+        onBlogsClick={handleBlogsClick}
+      />
 
       {/* Breadcrumb */}
       <div className="bg-gray-50 py-4">
