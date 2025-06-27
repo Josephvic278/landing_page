@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
@@ -24,10 +24,87 @@ export const MarkingServicePage = (): JSX.Element => {
   // Check if form is valid
   const isFormValid = assignment.trim() !== '' && instructions.trim() !== '';
 
+  // Save form data to localStorage before redirecting
+  const saveFormData = () => {
+    const formData = {
+      assignment: assignment.trim(),
+      instructions: instructions.trim(),
+      timestamp: Date.now(),
+      intendedDestination: 'https://v0-newnow21.vercel.app/marking-services'
+    };
+    localStorage.setItem('markingServiceFormData', JSON.stringify(formData));
+    localStorage.setItem('redirectAfterAuth', 'https://v0-newnow21.vercel.app/marking-services');
+  };
+
+  // Check for returning user and restore form data
+  useEffect(() => {
+    const savedFormData = localStorage.getItem('markingServiceFormData');
+    const authSuccess = localStorage.getItem('authSuccess');
+    const redirectUrl = localStorage.getItem('redirectAfterAuth');
+    
+    // If user just completed auth and we have a redirect URL
+    if (authSuccess === 'true' && redirectUrl) {
+      localStorage.removeItem('authSuccess');
+      localStorage.removeItem('redirectAfterAuth');
+      localStorage.removeItem('markingServiceFormData');
+      window.open(redirectUrl, '_blank');
+      return;
+    }
+    
+    // Restore form data if available and not too old (1 hour)
+    if (savedFormData) {
+      try {
+        const data = JSON.parse(savedFormData);
+        const isRecent = Date.now() - data.timestamp < 3600000; // 1 hour
+        
+        if (isRecent) {
+          setAssignment(data.assignment || '');
+          setInstructions(data.instructions || '');
+        } else {
+          // Clean up old data
+          localStorage.removeItem('markingServiceFormData');
+        }
+      } catch (error) {
+        console.error('Error parsing saved form data:', error);
+        localStorage.removeItem('markingServiceFormData');
+      }
+    }
+  }, []);
+
   // Handle Next button click
   const handleNextClick = () => {
     if (isFormValid) {
-      window.open('https://v0-newnow21.vercel.app/marking-services', '_blank');
+      saveFormData();
+      
+      // Try to open the intended page
+      const newWindow = window.open('https://v0-newnow21.vercel.app/marking-services', '_blank');
+      
+      // If popup was blocked or window couldn't be opened
+      if (!newWindow || newWindow.closed) {
+        // Fallback: navigate in the same window
+        window.location.href = 'https://v0-newnow21.vercel.app/marking-services';
+      } else {
+        // Set up a check to see if the user gets redirected to auth
+        const checkAuth = setInterval(() => {
+          try {
+            // This will throw an error if the window is on a different domain (auth page)
+            const currentUrl = newWindow.location.href;
+            
+            // If we can access the URL and it's not the intended destination,
+            // it might be an auth page
+            if (currentUrl && !currentUrl.includes('marking-services')) {
+              clearInterval(checkAuth);
+              // The user might be on an auth page, our localStorage data will handle the redirect
+            }
+          } catch (error) {
+            // Cross-origin error means we're probably on an auth page
+            // Continue checking...
+          }
+          
+          // Clean up after 30 seconds
+          setTimeout(() => clearInterval(checkAuth), 30000);
+        }, 1000);
+      }
     }
   };
 
