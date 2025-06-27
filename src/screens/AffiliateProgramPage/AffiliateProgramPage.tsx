@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Header } from "../../components/ui/header";
 import { UserPlus, Share2, Gift, ChevronDown, ChevronUp, Plus } from "lucide-react";
+
 const logowhite = 'https://raw.githubusercontent.com/Etherlabs-dev/studypalassets/refs/heads/main/2.png'
 const logoblack = 'https://raw.githubusercontent.com/Etherlabs-dev/studypalassets/refs/heads/main/1.png'
 const handshakeimg = 'https://raw.githubusercontent.com/Etherlabs-dev/studypalassets/refs/heads/main/affiliate-handshake-2.png'
@@ -60,7 +61,13 @@ const steps = [
 ];
 
 export const AffiliateProgramPage = (): JSX.Element => {
+  const navigate = useNavigate();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  // Navigation handlers for Header component
+  const handleAboutClick = () => navigate('/about');
+  const handlePricingClick = () => navigate('/pricing');
+  const handleBlogsClick = () => navigate('/blogs');
 
   const toggleFaq = (index: number) => {
     setOpenFaq(openFaq === index ? null : index);
@@ -68,12 +75,13 @@ export const AffiliateProgramPage = (): JSX.Element => {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
+      {/* Header Component */}
       <Header 
-        onAboutClick={scrollToAbout} 
-        onPricingClick={scrollToPricing}
-        onBlogsClick={scrollToBlogs}
+        onAboutClick={handleAboutClick}
+        onPricingClick={handlePricingClick}
+        onBlogsClick={handleBlogsClick}
       />
+
       {/* Breadcrumb */}
       <div className="bg-gray-50 py-4">
         <div className="container mx-auto px-4">
