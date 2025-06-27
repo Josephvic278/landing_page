@@ -17,6 +17,14 @@ export const Header = ({ onAboutClick, onPricingClick, onBlogsClick }: HeaderPro
     setIsMenuOpen(!isMenuOpen);
   };
 
+  const handleSignUp = () => {
+    window.open('https://v0-newnow21.vercel.app/signup', '_blank');
+  };
+
+  const handleSignIn = () => {
+    window.open('https://v0-newnow21.vercel.app/login', '_blank');
+  };
+
   return (
     <header className="w-full bg-white border-b border-gray-200">
       <div className="container mx-auto px-4 py-4">
@@ -69,10 +77,17 @@ export const Header = ({ onAboutClick, onPricingClick, onBlogsClick }: HeaderPro
             </button>
             
             <div className="hidden md:flex items-center space-x-4">
-              <Button variant="outline" className="border-primary-500 text-primary-500">
+              <Button 
+                variant="outline" 
+                className="border-primary-500 text-primary-500"
+                onClick={handleSignUp}
+              >
                 Sign Up
               </Button>
-              <Button className="bg-primary-500 text-white">
+              <Button 
+                className="bg-primary-500 text-white"
+                onClick={handleSignIn}
+              >
                 Sign In
               </Button>
             </div>
@@ -114,10 +129,17 @@ export const Header = ({ onAboutClick, onPricingClick, onBlogsClick }: HeaderPro
               Marking Services
             </Link>
             <div className="flex flex-col space-y-2 pt-2">
-              <Button variant="outline" className="border-primary-500 text-primary-500 w-full">
+              <Button 
+                variant="outline" 
+                className="border-primary-500 text-primary-500 w-full"
+                onClick={handleSignUp}
+              >
                 Sign Up
               </Button>
-              <Button className="bg-primary-500 text-white w-full">
+              <Button 
+                className="bg-primary-500 text-white w-full"
+                onClick={handleSignIn}
+              >
                 Sign In
               </Button>
             </div>
