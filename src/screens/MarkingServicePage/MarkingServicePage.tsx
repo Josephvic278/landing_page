@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
@@ -11,15 +11,24 @@ const logoblack = 'https://raw.githubusercontent.com/Etherlabs-dev/studypalasset
 
 export const MarkingServicePage = (): JSX.Element => {
   const navigate = useNavigate();
+  
+  // Form state
+  const [assignment, setAssignment] = useState('');
+  const [instructions, setInstructions] = useState('');
 
   // Navigation handlers for Header component
   const handleAboutClick = () => navigate('/about');
   const handlePricingClick = () => navigate('/pricing');
   const handleBlogsClick = () => navigate('/blogs');
 
+  // Check if form is valid
+  const isFormValid = assignment.trim() !== '' && instructions.trim() !== '';
+
   // Handle Next button click
   const handleNextClick = () => {
-    window.open('https://v0-newnow21.vercel.app/marking-services', '_blank');
+    if (isFormValid) {
+      window.open('https://v0-newnow21.vercel.app/marking-services', '_blank');
+    }
   };
 
   const steps = [
@@ -140,11 +149,20 @@ export const MarkingServicePage = (): JSX.Element => {
             {/* Form */}
             <div className="space-y-6 md:space-y-8">
               <div>
-                <label className="block text-gray-700 font-medium mb-2">Assignments</label>
+                <label className="block text-gray-700 font-medium mb-2">
+                  Assignments <span className="text-red-500">*</span>
+                </label>
                 <Textarea 
+                  value={assignment}
+                  onChange={(e) => setAssignment(e.target.value)}
                   placeholder="Write text here ..."
-                  className="w-full h-32 p-4 border border-gray-200 rounded-lg"
+                  className={`w-full h-32 p-4 border rounded-lg ${
+                    assignment.trim() === '' ? 'border-red-300 focus:border-red-500' : 'border-gray-200'
+                  }`}
                 />
+                {assignment.trim() === '' && (
+                  <p className="text-red-500 text-sm mt-1">Assignment text is required</p>
+                )}
                 <Button variant="outline" className="mt-4 flex items-center gap-2">
                   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M17.5 12.5V15.8333C17.5 16.2754 17.3244 16.6993 17.0118 17.0118C16.6993 17.3244 16.2754 17.5 15.8333 17.5H4.16667C3.72464 17.5 3.30072 17.3244 2.98816 17.0118C2.67559 16.6993 2.5 16.2754 2.5 15.8333V12.5M5.83333 8.33333L10 12.5M10 12.5L14.1667 8.33333M10 12.5V2.5" stroke="currentColor" strokeWidth="1.67" strokeLinecap="round" strokeLinejoin="round"/>
@@ -154,11 +172,20 @@ export const MarkingServicePage = (): JSX.Element => {
               </div>
 
               <div>
-                <label className="block text-gray-700 font-medium mb-2">Assignment Instructions</label>
+                <label className="block text-gray-700 font-medium mb-2">
+                  Assignment Instructions <span className="text-red-500">*</span>
+                </label>
                 <Textarea 
+                  value={instructions}
+                  onChange={(e) => setInstructions(e.target.value)}
                   placeholder="Write text here ..."
-                  className="w-full h-32 p-4 border border-gray-200 rounded-lg"
+                  className={`w-full h-32 p-4 border rounded-lg ${
+                    instructions.trim() === '' ? 'border-red-300 focus:border-red-500' : 'border-gray-200'
+                  }`}
                 />
+                {instructions.trim() === '' && (
+                  <p className="text-red-500 text-sm mt-1">Assignment instructions are required</p>
+                )}
                 <Button variant="outline" className="mt-4 flex items-center gap-2">
                   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M17.5 12.5V15.8333C17.5 16.2754 17.3244 16.6993 17.0118 17.0118C16.6993 17.3244 16.2754 17.5 15.8333 17.5H4.16667C3.72464 17.5 3.30072 17.3244 2.98816 17.0118C2.67559 16.6993 2.5 16.2754 2.5 15.8333V12.5M5.83333 8.33333L10 12.5M10 12.5L14.1667 8.33333M10 12.5V2.5" stroke="currentColor" strokeWidth="1.67" strokeLinecap="round" strokeLinejoin="round"/>
@@ -169,10 +196,20 @@ export const MarkingServicePage = (): JSX.Element => {
 
               <Button 
                 onClick={handleNextClick}
-                className="w-full bg-primary-500 hover:bg-primary-600 text-white py-3"
+                disabled={!isFormValid}
+                className={`w-full py-3 transition-all duration-200 ${
+                  isFormValid 
+                    ? 'bg-primary-500 hover:bg-primary-600 text-white cursor-pointer' 
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
               >
                 Next
               </Button>
+              {!isFormValid && (
+                <p className="text-red-500 text-sm text-center mt-2">
+                  Please fill in both fields to continue
+                </p>
+              )}
             </div>
           </div>
         </div>
