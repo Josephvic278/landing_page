@@ -1,17 +1,27 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Textarea } from "../../components/ui/textarea";
 import { Header } from "../../components/ui/header";
+
 const logowhite = 'https://raw.githubusercontent.com/Etherlabs-dev/studypalassets/refs/heads/main/2.png'
 const logoblack = 'https://raw.githubusercontent.com/Etherlabs-dev/studypalassets/refs/heads/main/1.png'
+
+export const MarkingServicePage = (): JSX.Element => {
+  const navigate = useNavigate();
+
   // Navigation handlers for Header component
   const handleAboutClick = () => navigate('/about');
   const handlePricingClick = () => navigate('/pricing');
   const handleBlogsClick = () => navigate('/blogs');
-export const MarkingServicePage = (): JSX.Element => {
+
+  // Handle Next button click
+  const handleNextClick = () => {
+    window.open('https://v0-newnow21.vercel.app/marking-services', '_blank');
+  };
+
   const steps = [
     { number: 1, text: "Upload Assignment" },
     { number: 2, text: "Words & Price" },
@@ -23,7 +33,7 @@ export const MarkingServicePage = (): JSX.Element => {
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-            <Header 
+      <Header 
         onAboutClick={handleAboutClick}
         onPricingClick={handlePricingClick}
         onBlogsClick={handleBlogsClick}
@@ -157,7 +167,10 @@ export const MarkingServicePage = (): JSX.Element => {
                 </Button>
               </div>
 
-              <Button className="w-full bg-primary-500 hover:bg-primary-600 text-white py-3">
+              <Button 
+                onClick={handleNextClick}
+                className="w-full bg-primary-500 hover:bg-primary-600 text-white py-3"
+              >
                 Next
               </Button>
             </div>
