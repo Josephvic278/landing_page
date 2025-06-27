@@ -18,7 +18,6 @@ const blogPosts = [
   {
     id: 1,
     image: image,
-    author: "Olivia Rhye",
     date: "20 Jan 2022",
     title: "UX review presentations",
     description:
@@ -28,7 +27,6 @@ const blogPosts = [
   {
     id: 2,
     image: image_1,
-    author: "Phoenix Baker",
     date: "19 Jan 2022",
     title: "Migrating to Linear 101",
     description:
@@ -38,7 +36,6 @@ const blogPosts = [
   {
     id: 3,
     image: image_2,
-    author: "Lana Steiner",
     date: "18 Jan 2022",
     title: "Building your API Stack",
     description:
@@ -48,7 +45,6 @@ const blogPosts = [
   {
     id: 4,
     image: image,
-    author: "Olivia Rhye",
     date: "20 Jan 2022",
     title: "UX review presentations",
     description:
@@ -58,7 +54,6 @@ const blogPosts = [
   {
     id: 5,
     image: image,
-    author: "Phoenix Baker",
     date: "19 Jan 2022",
     title: "Migrating to Linear 101",
     description:
@@ -68,7 +63,6 @@ const blogPosts = [
   {
     id: 6,
     image: image_2,
-    author: "Lana Steiner",
     date: "18 Jan 2022",
     title: "Building your API Stack",
     description:
@@ -78,7 +72,6 @@ const blogPosts = [
   {
     id: 7,
     image: image,
-    author: "Olivia Rhye",
     date: "20 Jan 2022",
     title: "UX review presentations",
     description:
@@ -88,7 +81,6 @@ const blogPosts = [
   {
     id: 8,
     image: image_1,
-    author: "Phoenix Baker",
     date: "19 Jan 2022",
     title: "Migrating to Linear 101",
     description:
@@ -98,7 +90,6 @@ const blogPosts = [
   {
     id: 9,
     image: image_2,
-    author: "Lana Steiner",
     date: "18 Jan 2022",
     title: "Building your API Stack",
     description:
@@ -192,7 +183,7 @@ export const BlogPage = (): JSX.Element => {
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-4">
                       <span className="text-sm text-primary-500">
-                        {post.author} • {post.date}
+                        {post.date}
                       </span>
                       <svg
                         className="w-5 h-5 text-gray-400 group-hover:text-primary-500 transition-colors"
