@@ -15,11 +15,6 @@ const logowhite = 'https://raw.githubusercontent.com/Etherlabs-dev/studypalasset
 // Mock data for the blog post
 const blogPost = {
   title: "UX review presentations",
-  author: {
-    name: "Olivia Rhye",
-    image: profile_pic,
-    role: "Product Designer",
-  },
   date: "20 Jan 2022",
   readTime: "5 min read",
   content: `
@@ -34,7 +29,6 @@ const blogPost = {
     {
       id: 1,
       title: "Building your API Stack",
-      author: "Lana Steiner",
       date: "18 Jan 2022",
       image: image_2,
       description:
@@ -44,7 +38,6 @@ const blogPost = {
     {
       id: 2,
       title: "Migrating to Linear 101",
-      author: "Phoenix Baker",
       date: "19 Jan 2022",
       image: image_1,
       description:
@@ -90,19 +83,10 @@ export const BlogDetailPage = (): JSX.Element => {
           {/* Article header */}
           <div className="mb-8">
             <h1 className="text-4xl font-bold text-gray-900 mb-4">{blogPost.title}</h1>
-            <div className="flex items-center space-x-4">
-              <Avatar className="h-10 w-10">
-                <AvatarImage src={blogPost.author.image} alt={blogPost.author.name} />
-              </Avatar>
-              <div>
-                <p className="text-gray-900 font-medium">{blogPost.author.name}</p>
-                <p className="text-gray-500 text-sm">{blogPost.author.role}</p>
-              </div>
-              <div className="text-gray-500 text-sm">
-                <span>{blogPost.date}</span>
-                <span className="mx-2">•</span>
-                <span>{blogPost.readTime}</span>
-              </div>
+            <div className="text-gray-500 text-sm">
+              <span>{blogPost.date}</span>
+              <span className="mx-2">•</span>
+              <span>{blogPost.readTime}</span>
             </div>
           </div>
 
@@ -139,7 +123,7 @@ export const BlogDetailPage = (): JSX.Element => {
                   />
                   <div className="mb-2">
                     <span className="text-sm text-primary-500">
-                      {post.author} • {post.date}
+                      {post.date}
                     </span>
                   </div>
                   <h3 className="text-xl font-semibold text-gray-900 group-hover:text-primary-500 transition-colors mb-2">
