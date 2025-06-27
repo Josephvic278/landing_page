@@ -1,0 +1,1 @@
+export { MarkingServicePage } from "./MarkingServicePage";

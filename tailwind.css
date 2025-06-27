@@ -1,0 +1,233 @@
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .all-\[unset\] {
+    all: unset;
+  }
+}
+
+:root {
+  --background-blur-sm: ;
+  --basewhite: rgba(255, 255, 255, 1);
+  --black: rgba(51, 51, 51, 1);
+  --blue-light50: rgba(240, 249, 255, 1);
+  --blue-light700: rgba(2, 106, 162, 1);
+  --gray-100: rgba(237, 238, 241, 1);
+  --gray-200: rgba(215, 219, 224, 1);
+  --gray-300: rgba(208, 213, 221, 1);
+  --gray-400: rgba(152, 162, 179, 1);
+  --gray-500: rgba(108, 121, 139, 1);
+  --gray-600: rgba(86, 97, 115, 1);
+  --gray-800: rgba(31, 42, 55, 1);
+  --gray-900: rgba(16, 24, 40, 1);
+  --gray-blue50: rgba(248, 249, 252, 1);
+  --gray-blue700: rgba(54, 63, 114, 1);
+  --indigo-50: rgba(238, 244, 255, 1);
+  --indigo-700: rgba(53, 56, 205, 1);
+  --pink-50: rgba(253, 242, 250, 1);
+  --pink-700: rgba(193, 21, 116, 1);
+  --primary-300: rgba(147, 187, 253, 1);
+  --primary-50: rgba(249, 245, 255, 1);
+  --primary-500: rgba(59, 130, 246, 1);
+  --primary-700: rgba(105, 65, 198, 1);
+  --primary-950: rgba(23, 46, 84, 1);
+  --ros-50: rgba(255, 241, 243, 1);
+  --ros-700: rgba(192, 16, 72, 1);
+  --shadow-xs: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
+  --success-50: rgba(236, 253, 243, 1);
+  --success-700: rgba(2, 122, 72, 1);
+  --text-2xl-font-bold-font-family: "Montserrat", Helvetica;
+  --text-2xl-font-bold-font-size: 24px;
+  --text-2xl-font-bold-font-style: normal;
+  --text-2xl-font-bold-font-weight: 700;
+  --text-2xl-font-bold-letter-spacing: -0.24px;
+  --text-2xl-font-bold-line-height: 150%;
+  --text-2xl-font-semibold-font-family: "Montserrat", Helvetica;
+  --text-2xl-font-semibold-font-size: 24px;
+  --text-2xl-font-semibold-font-style: normal;
+  --text-2xl-font-semibold-font-weight: 600;
+  --text-2xl-font-semibold-letter-spacing: 0px;
+  --text-2xl-font-semibold-line-height: 150%;
+  --text-3xl-font-semibold-font-family: "Montserrat", Helvetica;
+  --text-3xl-font-semibold-font-size: 30px;
+  --text-3xl-font-semibold-font-style: normal;
+  --text-3xl-font-semibold-font-weight: 600;
+  --text-3xl-font-semibold-letter-spacing: 0px;
+  --text-3xl-font-semibold-line-height: 150%;
+  --text-4xl-font-bold-font-family: "Montserrat", Helvetica;
+  --text-4xl-font-bold-font-size: 36px;
+  --text-4xl-font-bold-font-style: normal;
+  --text-4xl-font-bold-font-weight: 700;
+  --text-4xl-font-bold-letter-spacing: 0px;
+  --text-4xl-font-bold-line-height: 150%;
+  --text-4xl-font-semibold-font-family: "Montserrat", Helvetica;
+  --text-4xl-font-semibold-font-size: 36px;
+  --text-4xl-font-semibold-font-style: normal;
+  --text-4xl-font-semibold-font-weight: 600;
+  --text-4xl-font-semibold-letter-spacing: 0px;
+  --text-4xl-font-semibold-line-height: 150%;
+  --text-base-font-medium-font-family: "Montserrat", Helvetica;
+  --text-base-font-medium-font-size: 16px;
+  --text-base-font-medium-font-style: normal;
+  --text-base-font-medium-font-weight: 500;
+  --text-base-font-medium-letter-spacing: 0px;
+  --text-base-font-medium-line-height: 150%;
+  --text-base-font-normal-font-family: "Montserrat", Helvetica;
+  --text-base-font-normal-font-size: 16px;
+  --text-base-font-normal-font-style: normal;
+  --text-base-font-normal-font-weight: 400;
+  --text-base-font-normal-letter-spacing: 0px;
+  --text-base-font-normal-line-height: 150%;
+  --text-black: rgba(30, 30, 30, 1);
+  --text-lg-font-medium-font-family: "Montserrat", Helvetica;
+  --text-lg-font-medium-font-size: 18px;
+  --text-lg-font-medium-font-style: normal;
+  --text-lg-font-medium-font-weight: 500;
+  --text-lg-font-medium-letter-spacing: 0px;
+  --text-lg-font-medium-line-height: 150%;
+  --text-lg-font-normal-font-family: "Montserrat", Helvetica;
+  --text-lg-font-normal-font-size: 18px;
+  --text-lg-font-normal-font-style: normal;
+  --text-lg-font-normal-font-weight: 400;
+  --text-lg-font-normal-letter-spacing: 0px;
+  --text-lg-font-normal-line-height: 150%;
+  --text-md-regular-font-family: "Inter", Helvetica;
+  --text-md-regular-font-size: 16px;
+  --text-md-regular-font-style: normal;
+  --text-md-regular-font-weight: 400;
+  --text-md-regular-letter-spacing: 0px;
+  --text-md-regular-line-height: 24px;
+  --text-md-semibold-font-family: "Inter", Helvetica;
+  --text-md-semibold-font-size: 16px;
+  --text-md-semibold-font-style: normal;
+  --text-md-semibold-font-weight: 600;
+  --text-md-semibold-letter-spacing: 0px;
+  --text-md-semibold-line-height: 24px;
+  --text-sm-font-medium-font-family: "Montserrat", Helvetica;
+  --text-sm-font-medium-font-size: 14px;
+  --text-sm-font-medium-font-style: normal;
+  --text-sm-font-medium-font-weight: 500;
+  --text-sm-font-medium-letter-spacing: 0px;
+  --text-sm-font-medium-line-height: 150%;
+  --text-sm-font-normal-font-family: "Montserrat", Helvetica;
+  --text-sm-font-normal-font-size: 14px;
+  --text-sm-font-normal-font-style: normal;
+  --text-sm-font-normal-font-weight: 400;
+  --text-sm-font-normal-letter-spacing: 0px;
+  --text-sm-font-normal-line-height: 150%;
+  --text-sm-medium-font-family: "Inter", Helvetica;
+  --text-sm-medium-font-size: 14px;
+  --text-sm-medium-font-style: normal;
+  --text-sm-medium-font-weight: 500;
+  --text-sm-medium-letter-spacing: 0px;
+  --text-sm-medium-line-height: 20px;
+  --text-sm-regular-font-family: "Inter", Helvetica;
+  --text-sm-regular-font-size: 14px;
+  --text-sm-regular-font-style: normal;
+  --text-sm-regular-font-weight: 400;
+  --text-sm-regular-letter-spacing: 0px;
+  --text-sm-regular-line-height: 20px;
+  --text-xl-font-medium-font-family: "Montserrat", Helvetica;
+  --text-xl-font-medium-font-size: 20px;
+  --text-xl-font-medium-font-style: normal;
+  --text-xl-font-medium-font-weight: 500;
+  --text-xl-font-medium-letter-spacing: 0px;
+  --text-xl-font-medium-line-height: 150%;
+  --text-xl-font-normal-font-family: "Montserrat", Helvetica;
+  --text-xl-font-normal-font-size: 20px;
+  --text-xl-font-normal-font-style: normal;
+  --text-xl-font-normal-font-weight: 400;
+  --text-xl-font-normal-letter-spacing: 0px;
+  --text-xl-font-normal-line-height: 150%;
+  --text-xs-font-medium-font-family: "Montserrat", Helvetica;
+  --text-xs-font-medium-font-size: 12px;
+  --text-xs-font-medium-font-style: normal;
+  --text-xs-font-medium-font-weight: 500;
+  --text-xs-font-medium-letter-spacing: 0px;
+  --text-xs-font-medium-line-height: 150%;
+  --white: rgba(255, 255, 255, 1);
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 47.4% 11.2%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+
+    --card: transparent;
+    --card-foreground: 222.2 47.4% 11.2%;
+
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 210 40% 98%;
+
+    --ring: 215 20.2% 65.1%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 224 71% 4%;
+    --foreground: 213 31% 91%;
+
+    --muted: 223 47% 11%;
+    --muted-foreground: 215.4 16.3% 56.9%;
+
+    --accent: 216 34% 17%;
+    --accent-foreground: 210 40% 98%;
+
+    --popover: 224 71% 4%;
+    --popover-foreground: 215 20.2% 65.1%;
+
+    --border: 216 34% 17%;
+    --input: 216 34% 17%;
+
+    --card: transparent;
+    --card-foreground: 213 31% 91%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 1.2%;
+
+    --secondary: 222.2 47.4% 11.2%;
+    --secondary-foreground: 210 40% 98%;
+
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+
+    --ring: 216 34% 17%;
+
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
