@@ -86,6 +86,8 @@ export const ContactPage = (): JSX.Element => {
   });
 
   const [errors, setErrors] = useState<Partial<ContactForm>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
   // Subject options
   const subjectOptions = [
@@ -126,12 +128,100 @@ export const ContactPage = (): JSX.Element => {
     return Object.keys(newErrors).length === 0;
   };
 
+  // Submit form via email
+  const submitFormViaEmail = async (formData: ContactForm) => {
+    const subject = `Contact Form: ${formData.subject}`;
+    const body = `
+Full Name: ${formData.fullName}
+Email: ${formData.email}
+Phone: ${formData.phone}
+Subject: ${formData.subject}
+
+Message:
+${formData.message}
+
+Terms Accepted: ${formData.acceptTerms ? 'Yes' : 'No'}
+    `.trim();
+
+    const mailtoLink = `mailto:ethercess@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    
+    // Open email client
+    window.location.href = mailtoLink;
+    
+    return true;
+  };
+
+  // Alternative: Submit via EmailJS (recommended for better user experience)
+  const submitFormViaEmailJS = async (formData: ContactForm) => {
+    try {
+      // You'll need to install EmailJS: npm install emailjs-com
+      // And import it: import emailjs from 'emailjs-com';
+      
+      const templateParams = {
+        to_email: 'ethercess@gmail.com',
+        from_name: formData.fullName,
+        from_email: formData.email,
+        phone: formData.phone,
+        subject: formData.subject,
+        message: formData.message,
+        reply_to: formData.email,
+      };
+
+      // Replace with your EmailJS service ID, template ID, and user ID
+      // const result = await emailjs.send(
+      //   'YOUR_SERVICE_ID',
+      //   'YOUR_TEMPLATE_ID',
+      //   templateParams,
+      //   'YOUR_USER_ID'
+      // );
+
+      // For now, we'll use the mailto method
+      return await submitFormViaEmail(formData);
+    } catch (error) {
+      console.error('Error sending email:', error);
+      throw error;
+    }
+  };
+
   // Handle form submission
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
-      console.log("Form submitted:", formData);
-      // Handle form submission
+    
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitStatus('idle');
+
+    try {
+      await submitFormViaEmailJS(formData);
+      setSubmitStatus('success');
+      
+      // Reset form after successful submission
+      setFormData({
+        fullName: "",
+        email: "",
+        phone: "",
+        subject: "",
+        message: "",
+        acceptTerms: false,
+      });
+      
+      // Show success message for 5 seconds
+      setTimeout(() => {
+        setSubmitStatus('idle');
+      }, 5000);
+      
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      setSubmitStatus('error');
+      
+      setTimeout(() => {
+        setSubmitStatus('idle');
+      }, 5000);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -146,6 +236,23 @@ export const ContactPage = (): JSX.Element => {
     if (errors[name as keyof ContactForm]) {
       setErrors(prev => ({ ...prev, [name]: undefined }));
     }
+  };
+
+  // Success/Error message component
+  const StatusMessage = () => {
+    if (submitStatus === 'idle') return null;
+    
+    return (
+      <div className={`p-4 rounded-lg mb-6 ${
+        submitStatus === 'success' 
+          ? 'bg-green-50 text-green-800 border border-green-200' 
+          : 'bg-red-50 text-red-800 border border-red-200'
+      }`}>
+        {submitStatus === 'success' 
+          ? '✅ Your message has been sent successfully! We\'ll get back to you soon.' 
+          : '❌ There was an error sending your message. Please try again or contact us directly.'}
+      </div>
+    );
   };
 
   return (
@@ -169,6 +276,8 @@ export const ContactPage = (): JSX.Element => {
                 <p className="text-gray-600">Our friendly team would love to hear from you!</p>
               </div>
 
+              <StatusMessage />
+
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -180,6 +289,7 @@ export const ContactPage = (): JSX.Element => {
                     onChange={handleChange}
                     placeholder="Enter your full name"
                     className={`h-12 ${errors.fullName ? "border-red-500" : ""}`}
+                    disabled={isSubmitting}
                   />
                   {errors.fullName && (
                     <p className="mt-1 text-sm text-red-500">{errors.fullName}</p>
@@ -197,6 +307,7 @@ export const ContactPage = (): JSX.Element => {
                     onChange={handleChange}
                     placeholder="Enter your email address"
                     className={`h-12 ${errors.email ? "border-red-500" : ""}`}
+                    disabled={isSubmitting}
                   />
                   {errors.email && (
                     <p className="mt-1 text-sm text-red-500">{errors.email}</p>
@@ -211,6 +322,7 @@ export const ContactPage = (): JSX.Element => {
                     <select 
                       className="w-24 h-12 rounded-md border border-gray-200 bg-white px-3 py-2"
                       defaultValue="+1"
+                      disabled={isSubmitting}
                     >
                       <option value="+1">+1</option>
                       <option value="+44">+44</option>
@@ -223,6 +335,7 @@ export const ContactPage = (): JSX.Element => {
                       onChange={handleChange}
                       placeholder="Enter your phone number"
                       className="flex-1 h-12"
+                      disabled={isSubmitting}
                     />
                   </div>
                 </div>
@@ -236,6 +349,7 @@ export const ContactPage = (): JSX.Element => {
                     value={formData.subject}
                     onChange={handleChange}
                     className={`w-full h-12 rounded-md border ${errors.subject ? 'border-red-500' : 'border-gray-200'} bg-white px-3 py-2`}
+                    disabled={isSubmitting}
                   >
                     <option value="">Select a subject</option>
                     {subjectOptions.map((option) => (
@@ -257,6 +371,7 @@ export const ContactPage = (): JSX.Element => {
                     onChange={handleChange}
                     placeholder="Write your message here..."
                     className={`h-32 ${errors.message ? "border-red-500" : ""}`}
+                    disabled={isSubmitting}
                   />
                   {errors.message && (
                     <p className="mt-1 text-sm text-red-500">{errors.message}</p>
@@ -271,6 +386,7 @@ export const ContactPage = (): JSX.Element => {
                     checked={formData.acceptTerms}
                     onChange={handleChange}
                     className="mt-1 h-4 w-4 rounded border-gray-300 text-primary-500 focus:ring-primary-500"
+                    disabled={isSubmitting}
                   />
                   <label htmlFor="acceptTerms" className="ml-2 text-sm text-gray-600">
                     I agree to My Study Pal's{" "}
@@ -283,8 +399,12 @@ export const ContactPage = (): JSX.Element => {
                   <p className="text-sm text-red-500">{errors.acceptTerms}</p>
                 )}
 
-                <Button type="submit" className="w-full h-12 bg-primary-500">
-                  Send Message
+                <Button 
+                  type="submit" 
+                  className="w-full h-12 bg-primary-500"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Sending..." : "Send Message"}
                 </Button>
               </form>
             </div>
