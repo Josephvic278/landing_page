@@ -7,6 +7,10 @@ import { Textarea } from "../../components/ui/textarea";
 import { Header } from "../../components/ui/header";
 const logowhite = 'https://raw.githubusercontent.com/Etherlabs-dev/studypalassets/refs/heads/main/2.png'
 const logoblack = 'https://raw.githubusercontent.com/Etherlabs-dev/studypalassets/refs/heads/main/1.png'
+  // Navigation handlers for Header component
+  const handleAboutClick = () => navigate('/about');
+  const handlePricingClick = () => navigate('/pricing');
+  const handleBlogsClick = () => navigate('/blogs');
 export const MarkingServicePage = (): JSX.Element => {
   const steps = [
     { number: 1, text: "Upload Assignment" },
