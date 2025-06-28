@@ -2,12 +2,9 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "../../../../components/ui/button";
 import { Input } from "../../../../components/ui/input";
-import { Separator } from "../../../../components/ui/separator";
 
 // Define the link data for reusability and maintainability
 const quickLinks = [
-  { text: "About Us", path: "#" },
-  { text: "Pricing", path: "#" },
   { text: "Blogs", path: "/blogs" },
   { text: "Affiliate Program", path: "/affiliate-program" },
   { text: "Marking Service", path: "/marking-service" },
@@ -15,17 +12,21 @@ const quickLinks = [
 ];
 
 const writingTools = [
-  "Assignment Feedback",
-  "Paraphrasing",
-  "Grammar Checker",
-  "Outline Generator",
+  { text: "Assignment Feedback", url: "https://v0-newnow21.vercel.app/assignment-feedback" },
+  { text: "Paraphrasing", url: "https://v0-newnow21.vercel.app/paraphrasing" },
+  { text: "Grammar Checker", url: "https://v0-newnow21.vercel.app/grammar-checker" },
+  { text: "Outline Generator", url: "https://v0-newnow21.vercel.app/outline-generator" },
 ];
 
 const learningTools = ["Summarizer", "Text to Speech"];
 
 const aiTools = ["AI Teacher"];
 const logowhite = 'https://raw.githubusercontent.com/Etherlabs-dev/studypalassets/refs/heads/main/2.png'
+
 export const FooterSection = (): JSX.Element => {
+  // Get current year
+  const currentYear = new Date().getFullYear();
+
   return (
     <footer className="bg-black text-white py-16">
       <div className="container mx-auto px-4">
@@ -49,7 +50,7 @@ export const FooterSection = (): JSX.Element => {
                     <Link
                       key={index}
                       to={link.path}
-                      className="text-gray-100 hover:text-white font-text-base-font-medium"
+                      className="text-gray-100 hover:text-white font-text-base-font-medium transition-colors"
                     >
                       {link.text}
                     </Link>
@@ -64,13 +65,15 @@ export const FooterSection = (): JSX.Element => {
                 </h3>
                 <div className="flex flex-col items-start gap-3 w-full">
                   {writingTools.map((tool, index) => (
-                    <Button
+                    <a
                       key={index}
-                      variant="link"
-                      className="p-0 h-auto text-gray-100 font-text-base-font-medium justify-start"
+                      href={tool.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-gray-100 hover:text-white font-text-base-font-medium transition-colors"
                     >
-                      {tool}
-                    </Button>
+                      {tool.text}
+                    </a>
                   ))}
                 </div>
               </div>
@@ -86,7 +89,7 @@ export const FooterSection = (): JSX.Element => {
                       <Button
                         key={index}
                         variant="link"
-                        className="p-0 h-auto text-gray-100 font-text-base-font-medium justify-start"
+                        className="p-0 h-auto text-gray-100 font-text-base-font-medium justify-start hover:text-white transition-colors"
                       >
                         {tool}
                       </Button>
@@ -103,7 +106,7 @@ export const FooterSection = (): JSX.Element => {
                       <Button
                         key={index}
                         variant="link"
-                        className="p-0 h-auto text-gray-100 font-text-base-font-medium justify-start"
+                        className="p-0 h-auto text-gray-100 font-text-base-font-medium justify-start hover:text-white transition-colors"
                       >
                         {tool}
                       </Button>
@@ -125,7 +128,7 @@ export const FooterSection = (): JSX.Element => {
                     placeholder="Enter your email"
                   />
                 </div>
-                <Button className="bg-primary-500 text-white font-text-sm-font-medium">
+                <Button className="bg-primary-500 text-white font-text-sm-font-medium hover:bg-primary-600 transition-colors">
                   Subscribe
                 </Button>
               </div>
@@ -136,11 +139,11 @@ export const FooterSection = (): JSX.Element => {
         {/* Footer bottom section */}
         <div className="mt-12 pt-8 border-t border-gray-800">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-gray-400">© 2077 My Study Pal. All rights reserved.</p>
+            <p className="text-gray-400">© {currentYear} My Study Pal. All rights reserved.</p>
             <div className="flex space-x-6 mt-4 md:mt-0">
-              <Link to="/terms" className="text-gray-400 hover:text-white">Terms</Link>
-              <Link to="/privacy" className="text-gray-400 hover:text-white">Privacy</Link>
-              <Link to="/cookies" className="text-gray-400 hover:text-white">Cookies</Link>
+              <Link to="/terms" className="text-gray-400 hover:text-white transition-colors">Terms</Link>
+              <Link to="/privacy" className="text-gray-400 hover:text-white transition-colors">Privacy</Link>
+              <Link to="/cookies" className="text-gray-400 hover:text-white transition-colors">Cookies</Link>
             </div>
           </div>
         </div>
