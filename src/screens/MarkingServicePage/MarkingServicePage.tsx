@@ -168,8 +168,12 @@ export const MarkingServicePage = (): JSX.Element => {
       // Format duration for API - remove spaces and convert "5 days" to "120hours" if needed
       const durationKey = duration.replace(/\s/g, "")
 
-      // Try to get price from API
+      // Try to get price from API with increased timeout
       try {
+        // Create AbortController with longer timeout (15 seconds)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
+
         const response = await fetch("https://calculateorderprice-inypszbbea-uc.a.run.app", {
           method: "POST",
           headers: {
@@ -179,8 +183,11 @@ export const MarkingServicePage = (): JSX.Element => {
             wordCount: parsedWordCount,
             duration: durationKey,
           }),
-          signal: AbortSignal.timeout(5000),
+          signal: controller.signal,
         })
+
+        // Clear the timeout if request completes
+        clearTimeout(timeoutId);
 
         if (!response.ok) {
           throw new Error(`API returned status ${response.status}`)
@@ -203,6 +210,13 @@ export const MarkingServicePage = (): JSX.Element => {
         }
       } catch (apiError) {
         console.error("API Error:", apiError)
+
+        // Show user-friendly message for timeout
+        if (apiError.name === 'AbortError') {
+          toast.error("Price calculation service is taking longer than expected. Using default pricing.")
+        } else {
+          toast.error("Unable to connect to pricing service. Using default pricing.")
+        }
 
         // Calculate fallback price
         const durationMapping = {
@@ -250,6 +264,8 @@ export const MarkingServicePage = (): JSX.Element => {
       }
     } catch (error) {
       console.error("Price calculation error:", error)
+      toast.error("Error calculating price. Using default pricing.")
+      
       const fallbackPrice = 50
 
       const fallbackData = {
@@ -353,7 +369,8 @@ export const MarkingServicePage = (): JSX.Element => {
       const result = await calculatePrice(userEnteredWordCount, "24 hours")
 
       if (!result.success && result.fallback) {
-        toast.error("Using default pricing due to calculation service unavailability")
+        // Don't show error toast here as it's already shown in calculatePrice
+        console.log("Using fallback pricing")
       }
       
       setOrderDetails(prevState => ({
@@ -521,7 +538,8 @@ export const MarkingServicePage = (): JSX.Element => {
     const result = await calculatePrice(wordCount.replace(/,/g, ""), duration)
 
     if (!result.success && result.fallback) {
-      toast.error("Using default pricing due to calculation service unavailability")
+      // Don't show error toast here as it's already shown in calculatePrice
+      console.log("Using fallback pricing for duration selection")
     }
     
     const currentWordCount = orderDetails.wordCount
