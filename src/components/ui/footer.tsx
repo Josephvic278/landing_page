@@ -19,8 +19,8 @@ const writingTools = [
 ];
 
 const learningTools = ["Summarizer", "Text to Speech"];
-
 const aiTools = ["AI Teacher"];
+
 const logowhite = 'https://raw.githubusercontent.com/Etherlabs-dev/studypalassets/refs/heads/main/2.png'
 
 interface FooterProps {
@@ -34,9 +34,9 @@ export const Footer = ({ onAboutClick, onPricingClick, onBlogsClick }: FooterPro
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-black text-white py-16">
-      <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+    <footer className="bg-black text-white py-16 w-full">
+      <div className="w-full px-8 lg:px-16 xl:px-24">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 w-full">
           <div className="col-span-1">
             <img src={logowhite} alt="My Study Pal" className="h-12 mb-6" />
             <p className="text-gray-400">
@@ -143,8 +143,8 @@ export const Footer = ({ onAboutClick, onPricingClick, onBlogsClick }: FooterPro
         </div>
 
         {/* Footer bottom section */}
-        <div className="mt-12 pt-8 border-t border-gray-800">
-          <div className="flex flex-col md:flex-row justify-between items-center">
+        <div className="mt-12 pt-8 border-t border-gray-800 w-full">
+          <div className="flex flex-col md:flex-row justify-between items-center w-full">
             <p className="text-gray-400">© {currentYear} My Study Pal. All rights reserved.</p>
             <div className="flex space-x-6 mt-4 md:mt-0">
               <Link to="/terms" className="text-gray-400 hover:text-white transition-colors">Terms</Link>
