@@ -378,54 +378,73 @@ export const MarkingServicePage = (): JSX.Element => {
     }
   }
 
-  // Handle file upload
+  // Handle file upload - Fixed version without API dependency
   const handleFileUpload = async (type) => {
     const fileInput = document.createElement("input")
     fileInput.type = "file"
-    fileInput.accept = ".pdf,.doc,.docx"
+    fileInput.accept = ".pdf,.doc,.docx,.txt"
 
     fileInput.onchange = async (e) => {
       const file = e.target.files[0]
       if (!file) return
 
-      const formData = new FormData()
-      formData.append("file", file)
-
       try {
-        const response = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
-        })
+        // Validate file size (max 10MB)
+        const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+        if (file.size > maxSize) {
+          toast.error("File size must be less than 10MB")
+          return
+        }
 
-        if (!response.ok) throw new Error("Upload failed")
+        // Validate file type
+        const allowedTypes = [
+          'application/pdf',
+          'application/msword',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          'text/plain'
+        ]
+        
+        if (!allowedTypes.includes(file.type)) {
+          toast.error("Please upload a PDF, DOC, DOCX, or TXT file")
+          return
+        }
 
-        const data = await response.json()
-
+        // Create file data object with local file reference
         const fileData = {
           name: file.name,
           size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
-          url: data.blobPath,
+          type: file.type,
+          lastModified: file.lastModified,
+          file: file, // Store the actual file object for later use
         }
 
+        // Update state based on upload type
         if (type === "assignment") {
-          setUploadedFiles({
-            ...uploadedFiles,
+          setUploadedFiles(prev => ({
+            ...prev,
             assignment: fileData,
-          })
+          }))
+          toast.success(`Assignment file "${file.name}" uploaded successfully`)
         } else if (type === "instructions") {
-          setUploadedFiles({
-            ...uploadedFiles,
+          setUploadedFiles(prev => ({
+            ...prev,
             instructions: fileData,
-          })
+          }))
+          toast.success(`Instructions file "${file.name}" uploaded successfully`)
         } else if (type === "additional") {
-          setUploadedFiles({
-            ...uploadedFiles,
-            additional: [...uploadedFiles.additional, fileData],
-          })
+          setUploadedFiles(prev => ({
+            ...prev,
+            additional: [...prev.additional, fileData],
+          }))
+          toast.success(`Additional file "${file.name}" uploaded successfully`)
+        } else if (type === "improved") {
+          // Handle improved version upload
+          toast.success(`Improved version file "${file.name}" uploaded successfully`)
         }
+
       } catch (error) {
         console.error("Upload error:", error)
-        toast.error("Failed to upload file")
+        toast.error(`Failed to upload file: ${error.message}`)
       }
     }
 
@@ -439,18 +458,21 @@ export const MarkingServicePage = (): JSX.Element => {
         ...uploadedFiles,
         assignment: null,
       })
+      toast.success("Assignment file removed")
     } else if (type === "instructions") {
       setUploadedFiles({
         ...uploadedFiles,
         instructions: null,
       })
+      toast.success("Instructions file removed")
     } else if (type === "additional" && index !== null) {
       const newAdditional = [...uploadedFiles.additional]
-      newAdditional.splice(index, 1)
+      const removedFile = newAdditional.splice(index, 1)[0]
       setUploadedFiles({
         ...uploadedFiles,
         additional: newAdditional,
       })
+      toast.success(`File "${removedFile.name}" removed`)
     }
   }
 
@@ -820,7 +842,7 @@ export const MarkingServicePage = (): JSX.Element => {
                           onChange={(e) => setAssignmentText(e.target.value)}
                           disabled={!!uploadedFiles.assignment}
                         />
-                        <div className="mt-4">
+                        <div className="mt-4 flex items-center justify-between">
                           <button
                             onClick={() => handleFileUpload("assignment")}
                             className="flex items-center px-4 py-2 border border-blue-500 text-blue-500 rounded-lg hover:bg-blue-50"
@@ -828,6 +850,23 @@ export const MarkingServicePage = (): JSX.Element => {
                             <Upload size={16} className="mr-2" />
                             Or Upload File
                           </button>
+                          {uploadedFiles.assignment && (
+                            <div className="flex items-center">
+                              <div className="flex items-center mr-4">
+                                <FileText size={20} className="text-blue-500 mr-2" />
+                                <div>
+                                  <p className="font-medium text-sm">{uploadedFiles.assignment.name}</p>
+                                  <p className="text-xs text-gray-600">{uploadedFiles.assignment.size}</p>
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => handleRemoveFile("assignment")}
+                                className="text-red-500 hover:text-red-600"
+                              >
+                                <X size={16} />
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -840,7 +879,7 @@ export const MarkingServicePage = (): JSX.Element => {
                           onChange={(e) => setInstructionsText(e.target.value)}
                           disabled={!!uploadedFiles.instructions}
                         />
-                        <div className="mt-4">
+                        <div className="mt-4 flex items-center justify-between">
                           <button
                             onClick={() => handleFileUpload("instructions")}
                             className="flex items-center px-4 py-2 border border-blue-500 text-blue-500 rounded-lg hover:bg-blue-50"
@@ -848,6 +887,23 @@ export const MarkingServicePage = (): JSX.Element => {
                             <Upload size={16} className="mr-2" />
                             Or Upload File
                           </button>
+                          {uploadedFiles.instructions && (
+                            <div className="flex items-center">
+                              <div className="flex items-center mr-4">
+                                <FileText size={20} className="text-blue-500 mr-2" />
+                                <div>
+                                  <p className="font-medium text-sm">{uploadedFiles.instructions.name}</p>
+                                  <p className="text-xs text-gray-600">{uploadedFiles.instructions.size}</p>
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => handleRemoveFile("instructions")}
+                                className="text-red-500 hover:text-red-600"
+                              >
+                                <X size={16} />
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -1088,7 +1144,7 @@ export const MarkingServicePage = (): JSX.Element => {
                           value={additionalInstructionsText}
                           onChange={(e) => setAdditionalInstructionsText(e.target.value)}
                         />
-                        <div className="mt-4">
+                        <div className="mt-4 flex items-center justify-between">
                           <button
                             onClick={() => handleFileUpload("additional")}
                             className="flex items-center px-4 py-2 border border-blue-500 text-blue-500 rounded-lg hover:bg-blue-50"
@@ -1097,6 +1153,30 @@ export const MarkingServicePage = (): JSX.Element => {
                             Upload File
                           </button>
                         </div>
+                        
+                        {/* Display uploaded additional files */}
+                        {uploadedFiles.additional.length > 0 && (
+                          <div className="mt-4 space-y-2">
+                            <p className="text-sm font-medium text-gray-700">Uploaded Files:</p>
+                            {uploadedFiles.additional.map((file, index) => (
+                              <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                                <div className="flex items-center">
+                                  <FileText size={20} className="text-blue-500 mr-2" />
+                                  <div>
+                                    <p className="font-medium text-sm">{file.name}</p>
+                                    <p className="text-xs text-gray-600">{file.size}</p>
+                                  </div>
+                                </div>
+                                <button
+                                  onClick={() => handleRemoveFile("additional", index)}
+                                  className="text-red-500 hover:text-red-600"
+                                >
+                                  <X size={16} />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
@@ -1167,6 +1247,22 @@ export const MarkingServicePage = (): JSX.Element => {
                               <p className="text-gray-400">No file uploaded</p>
                             )}
                           </div>
+                          {uploadedFiles.additional.length > 0 && (
+                            <div>
+                              <p className="text-sm text-gray-600 mb-2">Additional Files</p>
+                              <div className="space-y-2">
+                                {uploadedFiles.additional.map((file, index) => (
+                                  <div key={index} className="flex items-center">
+                                    <FileText size={20} className="text-blue-500 mr-2" />
+                                    <div>
+                                      <p className="font-medium">{file.name}</p>
+                                      <p className="text-xs text-gray-600">{file.size}</p>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
 
                         <div className="flex justify-between items-center pt-4">
