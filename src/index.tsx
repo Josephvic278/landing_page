@@ -11,6 +11,8 @@ import { MarkingServicePage } from "./screens/MarkingServicePage";
 import { PrivacyPolicyPage } from "./screens/PrivacyPolicyPage";
 import { TermsPage } from "./screens/TermsPage";
 import { ScrollToTop } from "./components/ScrollToTop";
+import { ToastProvider } from "./contexts/ToastContext";
+import { Toaster } from "./components/ui/toaster";
 
 const router = createBrowserRouter([
   {
@@ -98,6 +100,9 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById("app") as HTMLElement).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <ToastProvider>
+      <RouterProvider router={router} />
+      <Toaster />
+    </ToastProvider>
   </StrictMode>
 );

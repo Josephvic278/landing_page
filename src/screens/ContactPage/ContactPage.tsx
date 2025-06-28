@@ -6,12 +6,8 @@ import { Input } from "../../components/ui/input";
 import { Textarea } from "../../components/ui/textarea";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../../components/ui/accordion";
 import { Header } from "../../components/ui/header";
+import { useToastContext } from "../../contexts/ToastContext";
 
-const image = 'https://raw.githubusercontent.com/Etherlabs-dev/studypalassets/refs/heads/main/image.png'
-const logoblack = 'https://raw.githubusercontent.com/Etherlabs-dev/studypalassets/refs/heads/main/1.png'
-const profile_pic = 'https://raw.githubusercontent.com/Etherlabs-dev/studypalassets/refs/heads/main/profile-pic.png'
-const image_2 = 'https://raw.githubusercontent.com/Etherlabs-dev/studypalassets/refs/heads/main/image-2.png'
-const image_1 = 'https://raw.githubusercontent.com/Etherlabs-dev/studypalassets/refs/heads/main/image-1.png'
 const logowhite = 'https://raw.githubusercontent.com/Etherlabs-dev/studypalassets/refs/heads/main/2.png'
 const contact_image = 'https://raw.githubusercontent.com/Etherlabs-dev/studypalassets/refs/heads/main/09082f60bc86ab2c09d3d731b545b8f6.jpg'
 
@@ -25,7 +21,7 @@ interface FAQ {
 interface ContactForm {
   fullName: string;
   email: string;
-  phone: string;
+  phoneNumber: string;
   subject: string;
   message: string;
   acceptTerms: boolean;
@@ -33,6 +29,7 @@ interface ContactForm {
 
 export const ContactPage = (): JSX.Element => {
   const navigate = useNavigate();
+  const { toast } = useToastContext();
 
   // Navigation handlers for Header component
   const handleAboutClick = () => navigate('/about');
@@ -79,7 +76,7 @@ export const ContactPage = (): JSX.Element => {
   const [formData, setFormData] = useState<ContactForm>({
     fullName: "",
     email: "",
-    phone: "",
+    phoneNumber: "",
     subject: "",
     message: "",
     acceptTerms: false,
@@ -87,7 +84,6 @@ export const ContactPage = (): JSX.Element => {
 
   const [errors, setErrors] = useState<Partial<ContactForm>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
   // Subject options
   const subjectOptions = [
@@ -128,57 +124,31 @@ export const ContactPage = (): JSX.Element => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Submit form via email
-  const submitFormViaEmail = async (formData: ContactForm) => {
-    const subject = `Contact Form: ${formData.subject}`;
-    const body = `
-Full Name: ${formData.fullName}
-Email: ${formData.email}
-Phone: ${formData.phone}
-Subject: ${formData.subject}
-
-Message:
-${formData.message}
-
-Terms Accepted: ${formData.acceptTerms ? 'Yes' : 'No'}
-    `.trim();
-
-    const mailtoLink = `mailto:ethercess@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    
-    // Open email client
-    window.location.href = mailtoLink;
-    
-    return true;
-  };
-
-  // Alternative: Submit via EmailJS (recommended for better user experience)
-  const submitFormViaEmailJS = async (formData: ContactForm) => {
+  // Submit form to API
+  const submitForm = async (formData: ContactForm) => {
     try {
-      // You'll need to install EmailJS: npm install emailjs-com
-      // And import it: import emailjs from 'emailjs-com';
-      
-      const templateParams = {
-        to_email: 'ethercess@gmail.com',
-        from_name: formData.fullName,
-        from_email: formData.email,
-        phone: formData.phone,
-        subject: formData.subject,
-        message: formData.message,
-        reply_to: formData.email,
-      };
+      const response = await fetch('https://submitcontactform-inypszbbea-uc.a.run.app', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fullName: formData.fullName,
+          email: formData.email,
+          phoneNumber: formData.phoneNumber,
+          subject: formData.subject,
+          message: formData.message,
+        }),
+      });
 
-      // Replace with your EmailJS service ID, template ID, and user ID
-      // const result = await emailjs.send(
-      //   'YOUR_SERVICE_ID',
-      //   'YOUR_TEMPLATE_ID',
-      //   templateParams,
-      //   'YOUR_USER_ID'
-      // );
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-      // For now, we'll use the mailto method
-      return await submitFormViaEmail(formData);
+      const result = await response.json();
+      return result;
     } catch (error) {
-      console.error('Error sending email:', error);
+      console.error('Error submitting form:', error);
       throw error;
     }
   };
@@ -192,34 +162,26 @@ Terms Accepted: ${formData.acceptTerms ? 'Yes' : 'No'}
     }
 
     setIsSubmitting(true);
-    setSubmitStatus('idle');
 
     try {
-      await submitFormViaEmailJS(formData);
-      setSubmitStatus('success');
+      await submitForm(formData);
+      
+      // Show success toast
+      toast.success('Your message has been sent successfully! We\'ll get back to you soon.');
       
       // Reset form after successful submission
       setFormData({
         fullName: "",
         email: "",
-        phone: "",
+        phoneNumber: "",
         subject: "",
         message: "",
         acceptTerms: false,
       });
       
-      // Show success message for 5 seconds
-      setTimeout(() => {
-        setSubmitStatus('idle');
-      }, 5000);
-      
     } catch (error) {
       console.error('Error submitting form:', error);
-      setSubmitStatus('error');
-      
-      setTimeout(() => {
-        setSubmitStatus('idle');
-      }, 5000);
+      toast.error('There was an error sending your message. Please try again or contact us directly.');
     } finally {
       setIsSubmitting(false);
     }
@@ -238,22 +200,13 @@ Terms Accepted: ${formData.acceptTerms ? 'Yes' : 'No'}
     }
   };
 
-  // Success/Error message component
-  const StatusMessage = () => {
-    if (submitStatus === 'idle') return null;
-    
-    return (
-      <div className={`p-4 rounded-lg mb-6 ${
-        submitStatus === 'success' 
-          ? 'bg-green-50 text-green-800 border border-green-200' 
-          : 'bg-red-50 text-red-800 border border-red-200'
-      }`}>
-        {submitStatus === 'success' 
-          ? '✅ Your message has been sent successfully! We\'ll get back to you soon.' 
-          : '❌ There was an error sending your message. Please try again or contact us directly.'}
-      </div>
-    );
-  };
+  // Check if form is valid
+  const isFormValid = formData.fullName.trim() !== '' && 
+                     formData.email.trim() !== '' && 
+                     /\S+@\S+\.\S+/.test(formData.email) &&
+                     formData.subject !== '' && 
+                     formData.message.trim() !== '' && 
+                     formData.acceptTerms;
 
   return (
     <div className="min-h-screen bg-white">
@@ -275,8 +228,6 @@ Terms Accepted: ${formData.acceptTerms ? 'Yes' : 'No'}
                 <h1 className="text-4xl font-bold mb-4">Get in Touch</h1>
                 <p className="text-gray-600">Our friendly team would love to hear from you!</p>
               </div>
-
-              <StatusMessage />
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
@@ -318,26 +269,15 @@ Terms Accepted: ${formData.acceptTerms ? 'Yes' : 'No'}
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Phone Number
                   </label>
-                  <div className="flex gap-4">
-                    <select 
-                      className="w-24 h-12 rounded-md border border-gray-200 bg-white px-3 py-2"
-                      defaultValue="+1"
-                      disabled={isSubmitting}
-                    >
-                      <option value="+1">+1</option>
-                      <option value="+44">+44</option>
-                      <option value="+91">+91</option>
-                    </select>
-                    <Input
-                      type="tel"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleChange}
-                      placeholder="Enter your phone number"
-                      className="flex-1 h-12"
-                      disabled={isSubmitting}
-                    />
-                  </div>
+                  <Input
+                    type="tel"
+                    name="phoneNumber"
+                    value={formData.phoneNumber}
+                    onChange={handleChange}
+                    placeholder="Enter your phone number"
+                    className="h-12"
+                    disabled={isSubmitting}
+                  />
                 </div>
 
                 <div>
@@ -401,8 +341,12 @@ Terms Accepted: ${formData.acceptTerms ? 'Yes' : 'No'}
 
                 <Button 
                   type="submit" 
-                  className="w-full h-12 bg-primary-500"
-                  disabled={isSubmitting}
+                  className={`w-full h-12 transition-all duration-200 ${
+                    isFormValid && !isSubmitting
+                      ? 'bg-primary-500 hover:bg-primary-600 text-white cursor-pointer' 
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
+                  disabled={!isFormValid || isSubmitting}
                 >
                   {isSubmitting ? "Sending..." : "Send Message"}
                 </Button>
