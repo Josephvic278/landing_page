@@ -18,9 +18,15 @@ const writingTools = [
   { text: "Outline Generator", url: "https://v0-newnow21.vercel.app/outline-generator" },
 ];
 
-const learningTools = ["Summarizer", "Text to Speech"];
+const learningTools = [
+  { text: "Text to Speech", url: "https://v0-newnow21.vercel.app/text-to-speech" },
+  { text: "Summarizer", url: "https://v0-newnow21.vercel.app/summarizer" },
+];
 
-const aiTools = ["AI Teacher"];
+const aiTools = [
+  { text: "AI Teacher", url: "https://v0-newnow21.vercel.app/ai-teacher" },
+];
+
 const logowhite = 'https://raw.githubusercontent.com/Etherlabs-dev/studypalassets/refs/heads/main/2.png'
 
 interface FooterProps {
@@ -92,13 +98,15 @@ export const Footer = ({ onAboutClick, onPricingClick, onBlogsClick }: FooterPro
                   </h3>
                   <div className="flex flex-col gap-3 w-full items-start">
                     {learningTools.map((tool, index) => (
-                      <Button
+                      <a
                         key={index}
-                        variant="link"
-                        className="p-0 h-auto text-gray-100 font-text-base-font-medium justify-start hover:text-white transition-colors"
+                        href={tool.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-gray-100 hover:text-white font-text-base-font-medium transition-colors"
                       >
-                        {tool}
-                      </Button>
+                        {tool.text}
+                      </a>
                     ))}
                   </div>
                 </div>
@@ -109,13 +117,15 @@ export const Footer = ({ onAboutClick, onPricingClick, onBlogsClick }: FooterPro
                   </h3>
                   <div className="flex flex-col gap-3 w-full items-start">
                     {aiTools.map((tool, index) => (
-                      <Button
+                      <a
                         key={index}
-                        variant="link"
-                        className="p-0 h-auto text-gray-100 font-text-base-font-medium justify-start hover:text-white transition-colors"
+                        href={tool.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-gray-100 hover:text-white font-text-base-font-medium transition-colors"
                       >
-                        {tool}
-                      </Button>
+                        {tool.text}
+                      </a>
                     ))}
                   </div>
                 </div>
