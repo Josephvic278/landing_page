@@ -19,8 +19,8 @@ const writingTools = [
 ];
 
 const learningTools = ["Summarizer", "Text to Speech"];
-const aiTools = ["AI Teacher"];
 
+const aiTools = ["AI Teacher"];
 const logowhite = 'https://raw.githubusercontent.com/Etherlabs-dev/studypalassets/refs/heads/main/2.png'
 
 interface FooterProps {
