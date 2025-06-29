@@ -1,21 +1,67 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import {
+  Loader2,
+  ArrowLeft,
+  CheckCircle,
+  Upload,
+  FileText,
+  Calendar,
+} from "lucide-react";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Textarea } from "../../components/ui/textarea";
 import { Header } from "../../components/ui/header";
 import { Footer } from "../../components/ui/footer";
+import { useToastContext } from "../../contexts/ToastContext";
 
 const logowhite = 'https://raw.githubusercontent.com/Etherlabs-dev/studypalassets/refs/heads/main/2.png'
 const logoblack = 'https://raw.githubusercontent.com/Etherlabs-dev/studypalassets/refs/heads/main/1.png'
 
+// Default pricing values for fallback
+const DEFAULT_PRICING = {
+  "24hours": 50,
+  "48hours": 25,
+  "72hours": 20,
+  "120hours": 15,
+}
+
 export const MarkingServicePage = (): JSX.Element => {
   const navigate = useNavigate();
+  const { toast } = useToastContext();
   
   // Form state
-  const [assignment, setAssignment] = useState('');
-  const [instructions, setInstructions] = useState('');
+  const [userEmail, setUserEmail] = useState('');
+  const [userEnteredWordCount, setUserEnteredWordCount] = useState("");
+  const [currentStep, setCurrentStep] = useState(1);
+  const [assignmentText, setAssignmentText] = useState("");
+  const [instructionsText, setInstructionsText] = useState("");
+  const [additionalInstructionsText, setAdditionalInstructionsText] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [checkoutUrl, setCheckoutUrl] = useState("");
+  const [wordCount, setWordCount] = useState("1,000");
+  const [isCalculatingPrice, setIsCalculatingPrice] = useState(false);
+  const [pricingData, setPricingData] = useState(null);
+  
+  // File upload states
+  const [assignmentFile, setAssignmentFile] = useState(null);
+  const [instructionsFile, setInstructionsFile] = useState(null);
+  const [additionalInstructionsFiles, setAdditionalInstructionsFiles] = useState([]);
+  const [uploadedFiles, setUploadedFiles] = useState({
+    assignment: null,
+    instructions: null,
+    additionalInstructions: [],
+    additional: [],
+  });
+
+  const [orderDetails, setOrderDetails] = useState({
+    title: "",
+    wordCount: "",
+    turnaroundTime: "",
+    totalAmount: "",
+  });
 
   // Navigation handlers for Header component
   const handleAboutClick = () => {
@@ -30,90 +76,406 @@ export const MarkingServicePage = (): JSX.Element => {
     navigate('/blogs');
   };
 
-  // Check if form is valid
-  const isFormValid = assignment.trim() !== '' && instructions.trim() !== '';
+  // File upload handlers (simplified for this example)
+  const handleAssignmentFileUploaded = (fileUrl, fileName) => {
+    setUploadedFiles({
+      ...uploadedFiles,
+      assignment: {
+        name: fileName,
+        size: "Unknown",
+        url: fileUrl,
+      },
+    });
+    setAssignmentFile({ name: fileName, url: fileUrl });
+  };
 
-  // Submit form data to external application
-  const submitToExternalApp = (formData) => {
-    // Create a hidden form element
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = 'https://v0-newnow21.vercel.app/marking-services';
-    form.style.display = 'none';
+  const handleAssignmentFileRemoved = () => {
+    setUploadedFiles({
+      ...uploadedFiles,
+      assignment: null,
+    });
+    setAssignmentFile(null);
+  };
 
-    // Add each piece of data as a hidden input
-    Object.keys(formData).forEach(key => {
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = key;
-      input.value = formData[key];
-      form.appendChild(input);
+  const handleInstructionsFileUploaded = (fileUrl, fileName) => {
+    setUploadedFiles({
+      ...uploadedFiles,
+      instructions: {
+        name: fileName,
+        size: "Unknown",
+        url: fileUrl,
+      },
+    });
+    setInstructionsFile({ name: fileName, url: fileUrl });
+  };
+
+  const handleInstructionsFileRemoved = () => {
+    setUploadedFiles({
+      ...uploadedFiles,
+      instructions: null,
+    });
+    setInstructionsFile(null);
+  };
+
+  const handleAdditionalInstructionsFileUploaded = (fileUrl, fileName) => {
+    const newFile = {
+      name: fileName,
+      size: "Unknown",
+      url: fileUrl,
+    };
+    setUploadedFiles({
+      ...uploadedFiles,
+      additionalInstructions: [...uploadedFiles.additionalInstructions, newFile],
+    });
+    setAdditionalInstructionsFiles([...additionalInstructionsFiles, { name: fileName, url: fileUrl }]);
+  };
+
+  const handleAdditionalInstructionsFileRemoved = (index) => {
+    const newAdditionalInstructions = [...uploadedFiles.additionalInstructions];
+    newAdditionalInstructions.splice(index, 1);
+
+    setUploadedFiles({
+      ...uploadedFiles,
+      additionalInstructions: newAdditionalInstructions,
     });
 
-    // Append form to body, submit, then remove
-    document.body.appendChild(form);
-    form.submit();
-    document.body.removeChild(form);
+    const newFiles = [...additionalInstructionsFiles];
+    newFiles.splice(index, 1);
+    setAdditionalInstructionsFiles(newFiles);
   };
 
-  // Check for returning user and restore form data
-  useEffect(() => {
-    const savedFormData = localStorage.getItem('markingServiceFormData');
-    const authSuccess = localStorage.getItem('authSuccess');
-    const redirectUrl = localStorage.getItem('redirectAfterAuth');
-    
-    // If user just completed auth and we have a redirect URL
-    if (authSuccess === 'true' && redirectUrl) {
-      localStorage.removeItem('authSuccess');
-      localStorage.removeItem('redirectAfterAuth');
-      localStorage.removeItem('markingServiceFormData');
-      window.open(redirectUrl, '_blank');
-      return;
-    }
-    
-    // Restore form data if available and not too old (1 hour)
-    if (savedFormData) {
-      try {
-        const data = JSON.parse(savedFormData);
-        const isRecent = Date.now() - data.timestamp < 3600000; // 1 hour
-        
-        if (isRecent) {
-          setAssignment(data.assignment || '');
-          setInstructions(data.instructions || '');
-        } else {
-          // Clean up old data
-          localStorage.removeItem('markingServiceFormData');
-        }
-      } catch (error) {
-        console.error('Error parsing saved form data:', error);
-        localStorage.removeItem('markingServiceFormData');
-      }
-    }
-  }, []);
+  // Calculate price using fallback if API fails
+  const calculatePrice = async (wordCountValue, duration) => {
+    setIsCalculatingPrice(true);
 
-  // Handle Next button click
-  const handleNextClick = () => {
-    if (isFormValid) {
-      // Prepare the data to send to the external application
-      const formData = {
-        assignmentText: assignment.trim(),
-        instructionsText: instructions.trim(),
-        timestamp: Date.now(),
-        source: 'mystudypal-marketing-site'
+    try {
+      const parsedWordCount = Number.parseInt(wordCountValue.toString().replace(/,/g, ""));
+
+      if (isNaN(parsedWordCount) || parsedWordCount <= 0) {
+        throw new Error("Invalid word count");
+      }
+
+      const durationKey = duration.replace(/\s/g, "");
+
+      try {
+        const response = await fetch("https://calculateorderprice-inypszbbea-uc.a.run.app", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            wordCount: parsedWordCount,
+            duration: durationKey,
+          }),
+          signal: AbortSignal.timeout(5000),
+        });
+
+        if (!response.ok) {
+          throw new Error(`API returned status ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        setOrderDetails(prevDetails => ({
+          ...prevDetails,
+          turnaroundTime: duration,
+          totalAmount: `$${data.totalCost}`,
+        }));
+        setPricingData(data);
+
+        return {
+          success: true,
+          price: data.totalCost,
+          data: data,
+        };
+      } catch (apiError) {
+        console.error("API Error:", apiError);
+
+        const durationMapping = {
+          "24hours": "24hours",
+          "48hours": "48hours",
+          "72hours": "72hours",
+          "120hours": "120hours",
+          "5days": "120hours",
+        };
+
+        const lookupKey = durationMapping[durationKey] || durationKey;
+        const ratePerThousand = DEFAULT_PRICING[lookupKey] || 50;
+        const wordCountMultiplier = Math.ceil(parsedWordCount / 1000);
+        const fallbackPrice = wordCountMultiplier * ratePerThousand;
+
+        const fallbackData = {
+          success: true,
+          totalCost: fallbackPrice,
+          currency: "USD",
+          breakdown: {
+            baseRate: ratePerThousand,
+            wordsPerRate: 1000,
+            wordCount: parsedWordCount,
+            wordCountMultiplier: wordCountMultiplier,
+            duration: durationKey,
+            durationMultiplier: 1,
+            calculation: `${ratePerThousand} × ${wordCountMultiplier} × 1 = ${fallbackPrice}`,
+          },
+        };
+
+        setOrderDetails({
+          ...orderDetails,
+          turnaroundTime: duration,
+          totalAmount: `$${fallbackPrice}`,
+        });
+        setPricingData(fallbackData);
+
+        return {
+          success: false,
+          fallback: true,
+          price: fallbackPrice,
+          data: fallbackData,
+        };
+      }
+    } catch (error) {
+      console.error("Price calculation error:", error);
+      const fallbackPrice = 50;
+
+      const fallbackData = {
+        success: true,
+        totalCost: fallbackPrice,
+        currency: "USD",
+        breakdown: {
+          baseRate: 50,
+          wordsPerRate: 1000,
+          wordCount: 1000,
+          wordCountMultiplier: 1,
+          duration: "24hours",
+          durationMultiplier: 1,
+          calculation: `50 × 1 × 1 = 50`,
+        },
+      };
+
+      setOrderDetails({
+        ...orderDetails,
+        turnaroundTime: duration,
+        totalAmount: `$${fallbackPrice}`,
+      });
+      setPricingData(fallbackData);
+
+      return {
+        success: false,
+        fallback: true,
+        price: fallbackPrice,
+        data: fallbackData,
+        error: error.message,
+      };
+    } finally {
+      setIsCalculatingPrice(false);
+    }
+  };
+
+  // Handle next step in new order flow
+  const handleNextStep = async () => {
+    if (currentStep === 1) {
+      // Validate inputs
+      if (!userEmail.trim() || !/\S+@\S+\.\S+/.test(userEmail)) {
+        toast.error("Please enter a valid email address");
+        return;
+      }
+      
+      if (!userEnteredWordCount || Number.parseInt(userEnteredWordCount) <= 0) {
+        toast.error("Please enter a valid word count");
+        return;
+      }
+      
+      if (!orderDetails.title.trim()) {
+        toast.error("Please enter a title for your assignment");
+        return;
+      }
+
+      const formattedWordCount = userEnteredWordCount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      setWordCount(formattedWordCount);
+      
+      const updatedOrderDetails = {
+        ...orderDetails,
+        wordCount: `${formattedWordCount} words`,
       };
       
-      // Submit to external application
-      submitToExternalApp(formData);
+      setOrderDetails(updatedOrderDetails);
+      
+      const result = await calculatePrice(userEnteredWordCount, "24 hours");
+
+      if (!result.success && result.fallback) {
+        toast.error("Using default pricing due to calculation service unavailability");
+      }
+      
+      setOrderDetails(prevState => ({
+        ...prevState,
+        turnaroundTime: "24 hours",
+        totalAmount: result.success ? `$${result.price}` : (result.fallback ? `$${result.price}` : "$0"),
+        wordCount: `${formattedWordCount} words`,
+      }));
+
+      setCurrentStep(currentStep + 1);
+    } else if (currentStep < 4) {
+      setCurrentStep(currentStep + 1);
     }
   };
 
-  const steps = [
-    { number: 1, text: "Upload Assignment" },
-    { number: 2, text: "Words & Price" },
-    { number: 3, text: "Additional Materials" },
-    { number: 4, text: "Review Order" },
-    { number: 5, text: "Make Payment" },
-  ];
+  // Handle previous step
+  const handlePreviousStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  // Handle price option selection
+  const handlePriceOptionSelect = async (duration) => {
+    if (isCalculatingPrice) return;
+
+    const result = await calculatePrice(wordCount.replace(/,/g, ""), duration);
+
+    if (!result.success && result.fallback) {
+      toast.error("Using default pricing due to calculation service unavailability");
+    }
+    
+    const currentWordCount = orderDetails.wordCount;
+    
+    setOrderDetails(prevDetails => {
+      return {
+        ...prevDetails,
+        turnaroundTime: duration,
+        totalAmount: result.success ? `$${result.price}` : (result.fallback ? `$${result.price}` : prevDetails.totalAmount),
+        wordCount: currentWordCount,
+      };
+    });
+  };
+
+  // Handle order submission
+  const handleOrderSubmit = async () => {
+    try {
+      setIsSubmitting(true);
+      
+      let formattedDuration = orderDetails.turnaroundTime.replace(/\s+/g, "");
+      
+      const durationMap = {
+        "24hours": "24hours",
+        "48hours": "48hours", 
+        "72hours": "72hours",
+        "120hours": "72hours",
+      };
+      
+      formattedDuration = durationMap[formattedDuration] || "24hours";
+      
+      const orderData = {
+        userId: userEmail, // Use email as userId
+        assignmentTitle: orderDetails.title,
+        wordCount: Number.parseInt(wordCount.replace(/,/g, "")),
+        duration: formattedDuration,
+        assignmentText: assignmentText || "",
+        assignmentFileUrl: uploadedFiles.assignment?.url || "",
+        instructions: instructionsText || "",
+        instructionsFileUrl: uploadedFiles.instructions?.url || "",
+        additionalNotes: additionalInstructionsText || "",
+        supportingMaterial: additionalInstructionsText || "", 
+        supportingMaterialUrl: uploadedFiles.additionalInstructions.length > 0 ? 
+          uploadedFiles.additionalInstructions[0].url : "",
+      };
+
+      const orderResponse = await fetch("https://createorder-inypszbbea-uc.a.run.app", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(orderData),
+      });
+      
+      if (!orderResponse.ok) {
+        const errorText = await orderResponse.text();
+        throw new Error(`Order API error (${orderResponse.status}): ${errorText}`);
+      }
+      
+      const amountStr = orderDetails.totalAmount.replace("$", "");
+      const amount = parseFloat(amountStr);
+      
+      const planId = `${userEmail}-${Date.now()}`;
+      
+      const checkoutData = {
+        userId: userEmail, // Use email as userId
+        amount: amount,
+        productName: "marking services",
+        customerEmail: userEmail,
+        customerName: `User ${userEmail}`,
+        planId: planId
+      };
+      
+      const checkoutResponse = await fetch("https://create2checkoutpayment-inypszbbea-uc.a.run.app", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(checkoutData),
+      });
+      
+      if (!checkoutResponse.ok) {
+        const errorText = await checkoutResponse.text();
+        throw new Error(`Checkout API error (${checkoutResponse.status}): ${errorText}`);
+      }
+      
+      const checkoutResult = await checkoutResponse.json();
+      
+      if (checkoutResult.success && checkoutResult.checkoutUrl) {
+        setCheckoutUrl(checkoutResult.checkoutUrl);
+        setShowSuccessPopup(true);
+      } else {
+        console.error("Invalid checkout result:", checkoutResult);
+        throw new Error("Failed to create payment link");
+      }
+      
+    } catch (error) {
+      console.error("Error in order or payment process:", error);
+      toast.error(`Failed: ${error.message}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Render step indicator
+  const renderStepIndicator = () => {
+    const steps = ["Upload Assignment", "Words & Price", "Additional Materials", "Review Order"];
+
+    return (
+      <div style={{ width: "100%", overflowX: "auto", paddingBottom: "20px", marginBottom: "20px" }}>
+        <div style={{ display: "table", minWidth: "100%", tableLayout: "fixed" }}>
+          {steps.map((step, index) => (
+            <div key={index} style={{ display: "table-cell", textAlign: "center", position: "relative" }}>
+              <div
+                style={{
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "50%",
+                  border: `1px solid ${currentStep === index + 1 ? "#3b82f6" : currentStep > index + 1 ? "#3b82f6" : "#d1d5db"}`,
+                  backgroundColor: currentStep > index + 1 ? "#3b82f6" : "transparent",
+                  color: currentStep > index + 1 ? "white" : currentStep === index + 1 ? "#3b82f6" : "#9ca3af",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: "8px",
+                }}
+              >
+                {index + 1}
+              </div>
+              <div
+                style={{
+                  fontSize: "14px",
+                  color: currentStep === index + 1 ? "#3b82f6" : "#6b7280",
+                }}
+              >
+                {step}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -143,61 +505,6 @@ export const MarkingServicePage = (): JSX.Element => {
         </div>
       </section>
 
-      {/* About Section */}
-      <section className="py-12 md:py-20 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col lg:flex-row items-center gap-8 md:gap-12">
-            <div className="lg:w-1/2 w-full">
-              <Badge className="mb-4 bg-blue-50 text-primary-500">About</Badge>
-              <h2 className="text-3xl md:text-4xl font-bold text-[#333333] mb-6">
-                Boost Your Grades with Expert Assignment Reviews
-              </h2>
-              <p className="text-gray-600 mb-6">
-                Struggling to improve your assignments? Our Marking Service connects you with subject-matter experts who provide in-depth feedback to help you achieve higher grades. Get expert comments, editing, and structural improvements tailored to your work.
-              </p>
-              <ul className="space-y-4">
-                <li className="flex items-center gap-2 text-gray-600">
-                  <span className="text-primary-500">→</span>
-                  In-text comments on areas needing improvement
-                </li>
-                <li className="flex items-center gap-2 text-gray-600">
-                  <span className="text-primary-500">→</span>
-                  Detailed explanations and suggestions
-                </li>
-                <li className="flex items-center gap-2 text-gray-600">
-                  <span className="text-primary-500">→</span>
-                  Grammar and structure corrections
-                </li>
-                <li className="flex items-center gap-2 text-gray-600">
-                  <span className="text-primary-500">→</span>
-                  Academic integrity compliance guidance
-                </li>
-              </ul>
-            </div>
-            <div className="lg:w-1/2 w-full relative">
-              <div className="aspect-video rounded-lg overflow-hidden relative">
-                <img
-                  src="https://raw.githubusercontent.com/Etherlabs-dev/studypalassets/refs/heads/main/image-9.png"
-                  alt="Student using marking service"
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                  <button className="w-12 h-12 md:w-16 md:h-16 flex items-center justify-center bg-white/60 rounded-full hover:bg-white/70 transition-colors">
-                    <img
-                      className="w-6 h-6 md:w-8 md:h-8"
-                      alt="Play video"
-                      src="https://raw.githubusercontent.com/Etherlabs-dev/studypalassets/6de39572aee1e60a2f67a6e896be89e141d9afa8/cp-icons-multimedia-and-audio-solid-play.svg"
-                    />
-                  </button>
-                </div>
-              </div>
-              <div className="absolute -bottom-10 -right-10 w-24 h-24 md:w-32 md:h-32 bg-primary-500 rounded-tr-[90px] hidden md:block" />
-              <div className="absolute -top-10 -left-10 w-20 h-20 md:w-24 md:h-24 bg-primary-950 rounded-br-[40px] hidden md:block" />
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Assignment Submission Section */}
       <section className="py-12 md:py-20 bg-white">
         <div className="container mx-auto px-4">
@@ -205,91 +512,737 @@ export const MarkingServicePage = (): JSX.Element => {
             <Badge className="mb-4 bg-blue-50 text-primary-500">Assignment</Badge>
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-8 md:mb-12">Assignment Submission</h2>
             
-            {/* Steps */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 md:mb-16 gap-4">
-              {steps.map((step, index) => (
-                <div key={index} className="flex items-center">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    index === 0 ? 'bg-primary-500 text-white' : 'bg-gray-200 text-gray-600'
-                  }`}>
-                    {step.number}
-                  </div>
-                  <span className="ml-2 text-sm text-gray-600">{step.text}</span>
-                  {index < steps.length - 1 && (
-                    <div className="hidden md:block w-8 h-px bg-gray-300 mx-4" />
-                  )}
+            {/* Step Indicator */}
+            {renderStepIndicator()}
+
+            {/* Step 1: Upload Assignment */}
+            {currentStep === 1 && (
+              <div style={{ maxWidth: "768px", margin: "0 auto" }}>
+                {/* Email Input */}
+                <div style={{ marginBottom: "32px" }}>
+                  <h3 style={{ fontSize: "18px", fontWeight: "500", marginBottom: "16px" }}>
+                    Email Address <span style={{ color: "#ef4444" }}>*</span>
+                  </h3>
+                  <input
+                    type="email"
+                    style={{
+                      width: "100%",
+                      padding: "12px",
+                      border: "1px solid #d1d5db",
+                      borderRadius: "6px",
+                      outline: "none",
+                    }}
+                    placeholder="Enter your email address"
+                    value={userEmail}
+                    onChange={(e) => setUserEmail(e.target.value)}
+                  />
                 </div>
-              ))}
-            </div>
 
-            {/* Form */}
-            <div className="space-y-6 md:space-y-8">
-              <div>
-                <label className="block text-gray-700 font-medium mb-2">
-                  Assignments <span className="text-red-500">*</span>
-                </label>
-                <Textarea 
-                  value={assignment}
-                  onChange={(e) => setAssignment(e.target.value)}
-                  placeholder="Write text here ..."
-                  className={`w-full h-32 p-4 border rounded-lg ${
-                    assignment.trim() === '' ? 'border-red-300 focus:border-red-500' : 'border-gray-200'
-                  }`}
-                />
-                {assignment.trim() === '' && (
-                  <p className="text-red-500 text-sm mt-1">Assignment text is required</p>
-                )}
-                <Button variant="outline" className="mt-4 flex items-center gap-2">
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M17.5 12.5V15.8333C17.5 16.2754 17.3244 16.6993 17.0118 17.0118C16.6993 17.3244 16.2754 17.5 15.8333 17.5H4.16667C3.72464 17.5 3.30072 17.3244 2.98816 17.0118C2.67559 16.6993 2.5 16.2754 2.5 15.8333V12.5M5.83333 8.33333L10 12.5M10 12.5L14.1667 8.33333M10 12.5V2.5" stroke="currentColor" strokeWidth="1.67" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  Or Upload File
-                </Button>
+                <div style={{ marginBottom: "32px" }}>
+                  <h3 style={{ fontSize: "18px", fontWeight: "500", marginBottom: "16px" }}>Assignments</h3>
+                  <textarea
+                    style={{
+                      width: "100%",
+                      padding: "12px",
+                      border: "1px solid #d1d5db",
+                      borderRadius: "6px",
+                      height: "160px",
+                      resize: "vertical",
+                      outline: "none",
+                    }}
+                    placeholder="Write text here ..."
+                    value={assignmentText}
+                    onChange={(e) => setAssignmentText(e.target.value)}
+                    disabled={!!uploadedFiles.assignment}
+                  ></textarea>
+                  <Button variant="outline" className="mt-4 flex items-center gap-2">
+                    <Upload size={20} />
+                    Or Upload File
+                  </Button>
+                </div>
+
+                <div style={{ marginBottom: "32px" }}>
+                  <h3 style={{ fontSize: "18px", fontWeight: "500", marginBottom: "16px" }}>
+                    Assignment Instructions
+                  </h3>
+                  <textarea
+                    style={{
+                      width: "100%",
+                      padding: "12px",
+                      border: "1px solid #d1d5db",
+                      borderRadius: "6px",
+                      height: "160px",
+                      resize: "vertical",
+                      outline: "none",
+                    }}
+                    placeholder="Write text here ..."
+                    value={instructionsText}
+                    onChange={(e) => setInstructionsText(e.target.value)}
+                    disabled={!!uploadedFiles.instructions}
+                  ></textarea>
+                  <Button variant="outline" className="mt-4 flex items-center gap-2">
+                    <Upload size={20} />
+                    Or Upload File
+                  </Button>
+                </div>
+
+                {/* Word count input */}
+                <div style={{ marginBottom: "32px" }}>
+                  <h3 style={{ fontSize: "18px", fontWeight: "500", marginBottom: "16px" }}>Word Count</h3>
+                  <input
+                    type="number"
+                    style={{
+                      width: "100%",
+                      padding: "12px",
+                      border: "1px solid #d1d5db",
+                      borderRadius: "6px",
+                      outline: "none",
+                    }}
+                    placeholder="Enter word count"
+                    value={userEnteredWordCount}
+                    onChange={(e) => setUserEnteredWordCount(e.target.value)}
+                  />
+                </div>
+
+                <div style={{ marginBottom: "32px" }}>
+                  <h3 style={{ fontSize: "18px", fontWeight: "500", marginBottom: "16px" }}>Assignment Title</h3>
+                  <input
+                    type="text"
+                    style={{
+                      width: "100%",
+                      padding: "12px",
+                      border: "1px solid #d1d5db",
+                      borderRadius: "6px",
+                      outline: "none",
+                    }}
+                    placeholder="Enter assignment title"
+                    value={orderDetails.title}
+                    onChange={(e) => setOrderDetails({...orderDetails, title: e.target.value})}
+                  />
+                </div>
+
+                <div style={{ marginTop: "32px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                  <button
+                    style={{
+                      padding: "12px",
+                      backgroundColor: "#e5e7eb",
+                      color: "#4b5563",
+                      borderRadius: "6px",
+                      border: "none",
+                      cursor: "pointer",
+                    }}
+                    onClick={() => navigate(-1)}
+                  >
+                    Back
+                  </button>
+                  <button
+                    style={{
+                      padding: "12px",
+                      backgroundColor: "#3b82f6",
+                      color: "white",
+                      borderRadius: "6px",
+                      border: "none",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                    onClick={handleNextStep}
+                    disabled={isCalculatingPrice}
+                  >
+                    {isCalculatingPrice ? (
+                      <>
+                        <Loader2
+                          size={20}
+                          style={{ marginRight: "8px", animation: "spin 1s linear infinite" }}
+                        />
+                        Calculating...
+                      </>
+                    ) : (
+                      "Next"
+                    )}
+                  </button>
+                </div>
               </div>
+            )}
 
-              <div>
-                <label className="block text-gray-700 font-medium mb-2">
-                  Assignment Instructions <span className="text-red-500">*</span>
-                </label>
-                <Textarea 
-                  value={instructions}
-                  onChange={(e) => setInstructions(e.target.value)}
-                  placeholder="Write text here ..."
-                  className={`w-full h-32 p-4 border rounded-lg ${
-                    instructions.trim() === '' ? 'border-red-300 focus:border-red-500' : 'border-gray-200'
-                  }`}
-                />
-                {instructions.trim() === '' && (
-                  <p className="text-red-500 text-sm mt-1">Assignment instructions are required</p>
-                )}
-                <Button variant="outline" className="mt-4 flex items-center gap-2">
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M17.5 12.5V15.8333C17.5 16.2754 17.3244 16.6993 17.0118 17.0118C16.6993 17.3244 16.2754 17.5 15.8333 17.5H4.16667C3.72464 17.5 3.30072 17.3244 2.98816 17.0118C2.67559 16.6993 2.5 16.2754 2.5 15.8333V12.5M5.83333 8.33333L10 12.5M10 12.5L14.1667 8.33333M10 12.5V2.5" stroke="currentColor" strokeWidth="1.67" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  Or Upload File
-                </Button>
+            {/* Step 2: Words & Price */}
+            {currentStep === 2 && (
+              <div style={{ maxWidth: "900px", margin: "0 auto" }}>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 2fr",
+                    gap: "32px",
+                    marginBottom: "32px",
+                  }}
+                >
+                  <div>
+                    <h3 style={{ fontSize: "18px", fontWeight: "500", marginBottom: "16px" }}>Total Words</h3>
+                    <div
+                      style={{
+                        backgroundColor: "#f9fafb",
+                        borderRadius: "8px",
+                        padding: "24px",
+                        border: "1px solid #e5e7eb",
+                      }}
+                    >
+                      <div style={{ marginBottom: "16px" }}>
+                        <p style={{ fontSize: "15px", fontWeight: "500", marginBottom: "8px" }}>Word Count</p>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            backgroundColor: "#fff",
+                            border: "1px solid #d1d5db",
+                            borderRadius: "6px",
+                            padding: "12px 16px",
+                          }}
+                        >
+                          <span style={{ fontSize: "18px", fontWeight: "600", color: "#111827" }}>
+                            {wordCount}
+                          </span>
+                          <span style={{ fontSize: "15px", color: "#6b7280", marginLeft: "4px" }}>words</span>
+                        </div>
+                      </div>
+                      <div style={{ fontSize: "14px", color: "#6b7280" }}>
+                        <p style={{ margin: "0" }}>This is the word count you entered.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 style={{ fontSize: "18px", fontWeight: "500", marginBottom: "16px" }}>
+                      Pricing Calculation
+                    </h3>
+
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "1fr 1fr",
+                        gap: "16px",
+                        marginBottom: "24px",
+                      }}
+                    >
+                      {/* 24 hours option */}
+                      <div
+                        style={{
+                          border: `1px solid ${orderDetails.turnaroundTime === "24 hours" ? "#3b82f6" : "#e5e7eb"}`,
+                          borderRadius: "8px",
+                          padding: "20px",
+                          cursor: "pointer",
+                          backgroundColor:
+                            orderDetails.turnaroundTime === "24 hours" ? "#eff6ff" : "transparent",
+                          boxShadow:
+                            orderDetails.turnaroundTime === "24 hours"
+                              ? "0 0 0 2px rgba(59, 130, 246, 0.3)"
+                              : "none",
+                          transition: "all 0.2s ease",
+                        }}
+                        onClick={() => handlePriceOptionSelect("24 hours")}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", marginBottom: "12px" }}>
+                          <div
+                            style={{
+                              width: "20px",
+                              height: "20px",
+                              borderRadius: "50%",
+                              border: `1px solid ${orderDetails.turnaroundTime === "24 hours" ? "#3b82f6" : "#d1d5db"}`,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              marginRight: "8px",
+                            }}
+                          >
+                            {orderDetails.turnaroundTime === "24 hours" && (
+                              <div
+                                style={{
+                                  width: "12px",
+                                  height: "12px",
+                                  borderRadius: "50%",
+                                  backgroundColor: "#3b82f6",
+                                }}
+                              ></div>
+                            )}
+                          </div>
+                          <span style={{ marginLeft: "8px", fontWeight: "500", fontSize: "16px" }}>
+                            24 hours
+                          </span>
+                        </div>
+                        <p
+                          style={{ fontSize: "24px", fontWeight: "700", marginBottom: "4px", color: "#111827" }}
+                        >
+                          $50 <span style={{ fontSize: "16px", fontWeight: "500" }}>per</span>
+                        </p>
+                        <p style={{ color: "#6b7280", margin: "0", fontSize: "15px" }}>1,000 words</p>
+                      </div>
+
+                      {/* 48 hours option */}
+                      <div
+                        style={{
+                          border: `1px solid ${orderDetails.turnaroundTime === "48 hours" ? "#3b82f6" : "#e5e7eb"}`,
+                          borderRadius: "8px",
+                          padding: "20px",
+                          cursor: "pointer",
+                          backgroundColor:
+                            orderDetails.turnaroundTime === "48 hours" ? "#eff6ff" : "transparent",
+                          boxShadow:
+                            orderDetails.turnaroundTime === "48 hours"
+                              ? "0 0 0 2px rgba(59, 130, 246, 0.3)"
+                              : "none",
+                          transition: "all 0.2s ease",
+                        }}
+                        onClick={() => handlePriceOptionSelect("48 hours")}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", marginBottom: "12px" }}>
+                          <div
+                            style={{
+                              width: "20px",
+                              height: "20px",
+                              borderRadius: "50%",
+                              border: `1px solid ${orderDetails.turnaroundTime === "48 hours" ? "#3b82f6" : "#d1d5db"}`,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              marginRight: "8px",
+                            }}
+                          >
+                            {orderDetails.turnaroundTime === "48 hours" && (
+                              <div
+                                style={{
+                                  width: "12px",
+                                  height: "12px",
+                                  borderRadius: "50%",
+                                  backgroundColor: "#3b82f6",
+                                }}
+                              ></div>
+                            )}
+                          </div>
+                          <span style={{ marginLeft: "8px", fontWeight: "500", fontSize: "16px" }}>
+                            48 hours
+                          </span>
+                        </div>
+                        <p
+                          style={{ fontSize: "24px", fontWeight: "700", marginBottom: "4px", color: "#111827" }}
+                        >
+                          $25 <span style={{ fontSize: "16px", fontWeight: "500" }}>per</span>
+                        </p>
+                        <p style={{ color: "#6b7280", margin: "0", fontSize: "15px" }}>1,000 words</p>
+                      </div>
+
+                      {/* 72 hours option */}
+                      <div
+                        style={{
+                          border: `1px solid ${orderDetails.turnaroundTime === "72 hours" ? "#3b82f6" : "#e5e7eb"}`,
+                          borderRadius: "8px",
+                          padding: "20px",
+                          cursor: "pointer",
+                          backgroundColor:
+                            orderDetails.turnaroundTime === "72 hours" ? "#eff6ff" : "transparent",
+                          boxShadow:
+                            orderDetails.turnaroundTime === "72 hours"
+                              ? "0 0 0 2px rgba(59, 130, 246, 0.3)"
+                              : "none",
+                          transition: "all 0.2s ease",
+                        }}
+                        onClick={() => handlePriceOptionSelect("72 hours")}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", marginBottom: "12px" }}>
+                          <div
+                            style={{
+                              width: "20px",
+                              height: "20px",
+                              borderRadius: "50%",
+                              border: `1px solid ${orderDetails.turnaroundTime === "72 hours" ? "#3b82f6" : "#d1d5db"}`,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              marginRight: "8px",
+                            }}
+                          >
+                            {orderDetails.turnaroundTime === "72 hours" && (
+                              <div
+                                style={{
+                                  width: "12px",
+                                  height: "12px",
+                                  borderRadius: "50%",
+                                  backgroundColor: "#3b82f6",
+                                }}
+                              ></div>
+                            )}
+                          </div>
+                          <span style={{ marginLeft: "8px", fontWeight: "500", fontSize: "16px" }}>
+                            72 hours
+                          </span>
+                        </div>
+                        <p
+                          style={{ fontSize: "24px", fontWeight: "700", marginBottom: "4px", color: "#111827" }}
+                        >
+                          $20 <span style={{ fontSize: "16px", fontWeight: "500" }}>per</span>
+                        </p>
+                        <p style={{ color: "#6b7280", margin: "0", fontSize: "15px" }}>1,000 words</p>
+                      </div>
+
+                      {/* 120 hours option */}
+                      <div
+                        style={{
+                          border: `1px solid ${orderDetails.turnaroundTime === "120 hours" ? "#3b82f6" : "#e5e7eb"}`,
+                          borderRadius: "8px",
+                          padding: "20px",
+                          cursor: "pointer",
+                          backgroundColor:
+                            orderDetails.turnaroundTime === "120 hours" ? "#eff6ff" : "transparent",
+                          boxShadow:
+                            orderDetails.turnaroundTime === "120 hours"
+                              ? "0 0 0 2px rgba(59, 130, 246, 0.3)"
+                              : "none",
+                          transition: "all 0.2s ease",
+                        }}
+                        onClick={() => handlePriceOptionSelect("120 hours")}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", marginBottom: "12px" }}>
+                          <div
+                            style={{
+                              width: "20px",
+                              height: "20px",
+                              borderRadius: "50%",
+                              border: `1px solid ${orderDetails.turnaroundTime === "120 hours" ? "#3b82f6" : "#d1d5db"}`,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              marginRight: "8px",
+                            }}
+                          >
+                            {orderDetails.turnaroundTime === "120 hours" && (
+                              <div
+                                style={{
+                                  width: "12px",
+                                  height: "12px",
+                                  borderRadius: "50%",
+                                  backgroundColor: "#3b82f6",
+                                }}
+                              ></div>
+                            )}
+                          </div>
+                          <span style={{ marginLeft: "8px", fontWeight: "500", fontSize: "16px" }}>
+                            120 hours
+                          </span>
+                        </div>
+                        <p
+                          style={{ fontSize: "24px", fontWeight: "700", marginBottom: "4px", color: "#111827" }}
+                        >
+                          $15 <span style={{ fontSize: "16px", fontWeight: "500" }}>per</span>
+                        </p>
+                        <p style={{ color: "#6b7280", margin: "0", fontSize: "15px" }}>1,000 words</p>
+                      </div>
+
+                      {pricingData && (
+                        <div
+                          style={{
+                            marginTop: "16px",
+                            backgroundColor: "#f9fafb",
+                            padding: "12px",
+                            borderRadius: "8px",
+                            border: "1px solid #e5e7eb",
+                            gridColumn: "span 2",
+                          }}
+                        >
+                          <p style={{ fontWeight: "500", marginBottom: "8px" }}>Price Breakdown:</p>
+                          <p style={{ margin: "4px 0", fontSize: "14px" }}>
+                            Base Rate: ${pricingData.breakdown.baseRate} per{" "}
+                            {pricingData.breakdown.wordsPerRate} words
+                          </p>
+                          <p style={{ margin: "4px 0", fontSize: "14px" }}>
+                            Word Count: {pricingData.breakdown.wordCount} words
+                          </p>
+                          <p style={{ margin: "4px 0", fontSize: "14px" }}>
+                            Duration: {pricingData.breakdown.duration}
+                          </p>
+                          <p style={{ margin: "8px 0 0 0", fontSize: "14px", fontWeight: "500" }}>
+                            Calculation: {pricingData.breakdown.calculation}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  style={{ marginTop: "40px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}
+                >
+                  <button
+                    style={{
+                      padding: "12px",
+                      backgroundColor: "#e5e7eb",
+                      color: "#4b5563",
+                      borderRadius: "6px",
+                      border: "none",
+                      cursor: "pointer",
+                      fontSize: "16px",
+                      fontWeight: "500",
+                    }}
+                    onClick={handlePreviousStep}
+                  >
+                    Back
+                  </button>
+                  <button
+                    style={{
+                      padding: "12px",
+                      backgroundColor: "#3b82f6",
+                      color: "white",
+                      borderRadius: "6px",
+                      border: "none",
+                      cursor: "pointer",
+                      fontSize: "16px",
+                      fontWeight: "500",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                    onClick={handleNextStep}
+                    disabled={isCalculatingPrice}
+                  >
+                    {isCalculatingPrice ? (
+                      <>
+                        <Loader2
+                          size={20}
+                          style={{ marginRight: "8px", animation: "spin 1s linear infinite" }}
+                        />
+                        Processing...
+                      </>
+                    ) : (
+                      "Next"
+                    )}
+                  </button>
+                </div>
               </div>
+            )}
 
-              <Button 
-                onClick={handleNextClick}
-                disabled={!isFormValid}
-                className={`w-full py-3 transition-all duration-200 ${
-                  isFormValid 
-                    ? 'bg-primary-500 hover:bg-primary-600 text-white cursor-pointer' 
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
-              >
-                Next
-              </Button>
-              {!isFormValid && (
-                <p className="text-red-500 text-sm text-center mt-2">
-                  Please fill in both fields to continue
-                </p>
-              )}
-            </div>
+            {/* Step 3: Additional Materials */}
+            {currentStep === 3 && (
+              <div style={{ maxWidth: "768px", margin: "0 auto" }}>
+                <div style={{ marginBottom: "32px" }}>
+                  <h3 style={{ fontSize: "18px", fontWeight: "500", marginBottom: "16px" }}>
+                    Supporting Materials (Optional)
+                  </h3>
+                  <textarea
+                    style={{
+                      width: "100%",
+                      padding: "12px",
+                      border: "1px solid #d1d5db",
+                      borderRadius: "6px",
+                      height: "160px",
+                      resize: "vertical",
+                      outline: "none",
+                    }}
+                    placeholder="Write text here ..."
+                    value={additionalInstructionsText}
+                    onChange={(e) => setAdditionalInstructionsText(e.target.value)}
+                  ></textarea>
+
+                  <Button variant="outline" className="mt-4 flex items-center gap-2">
+                    <Upload size={20} />
+                    Upload File
+                  </Button>
+                </div>
+
+                <div
+                  style={{ marginTop: "32px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}
+                >
+                  <button
+                    style={{
+                      padding: "12px",
+                      backgroundColor: "#e5e7eb",
+                      color: "#4b5563",
+                      borderRadius: "6px",
+                      border: "none",
+                      cursor: "pointer",
+                    }}
+                    onClick={handlePreviousStep}
+                  >
+                    Back
+                  </button>
+                  <button
+                    style={{
+                      padding: "12px",
+                      backgroundColor: "#3b82f6",
+                      color: "white",
+                      borderRadius: "6px",
+                      border: "none",
+                      cursor: "pointer",
+                    }}
+                    onClick={handleNextStep}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 4: Review Order */}
+            {currentStep === 4 && (
+              <div style={{ maxWidth: "768px", margin: "0 auto" }}>
+                <div
+                  style={{
+                    backgroundColor: "#f9fafb",
+                    borderRadius: "8px",
+                    padding: "24px",
+                    marginBottom: "32px",
+                  }}
+                >
+                  <h3 style={{ fontSize: "18px", fontWeight: "500", marginBottom: "24px" }}>Order Summary</h3>
+
+                  <div
+                    style={{ borderBottom: "1px solid #e5e7eb", paddingBottom: "16px", marginBottom: "16px" }}
+                  >
+                    <p style={{ fontSize: "14px", color: "#6b7280", marginBottom: "4px" }}>Email</p>
+                    <p style={{ fontWeight: "500" }}>{userEmail}</p>
+                  </div>
+
+                  <div
+                    style={{ borderBottom: "1px solid #e5e7eb", paddingBottom: "16px", marginBottom: "16px" }}
+                  >
+                    <p style={{ fontSize: "14px", color: "#6b7280", marginBottom: "4px" }}>Assignment Title</p>
+                    <p style={{ fontWeight: "500" }}>{orderDetails.title}</p>
+                  </div>
+
+                  <div
+                    style={{
+                      borderBottom: "1px solid #e5e7eb",
+                      paddingBottom: "16px",
+                      marginBottom: "16px",
+                      display: "grid",
+                      gridTemplateColumns: "1fr",
+                      gap: "16px",
+                    }}
+                  >
+                    <div>
+                      <p style={{ fontSize: "14px", color: "#6b7280", marginBottom: "4px" }}>Word Count</p>
+                      <p style={{ margin: "0" }}>{orderDetails.wordCount}</p>
+                    </div>
+                    <div>
+                      <p style={{ fontSize: "14px", color: "#6b7280", marginBottom: "4px" }}>Turnaround Time</p>
+                      <p style={{ margin: "0" }}>{orderDetails.turnaroundTime}</p>
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      paddingTop: "16px",
+                    }}
+                  >
+                    <p style={{ fontWeight: "500" }}>Total Amount</p>
+                    <p style={{ fontSize: "20px", fontWeight: "700" }}>{orderDetails.totalAmount}</p>
+                  </div>
+                </div>
+
+                <div
+                  style={{ marginTop: "32px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}
+                >
+                  <button
+                    style={{
+                      padding: "12px",
+                      backgroundColor: "#e5e7eb",
+                      color: "#4b5563",
+                      borderRadius: "6px",
+                      border: "none",
+                      cursor: "pointer",
+                    }}
+                    onClick={handlePreviousStep}
+                  >
+                    Back
+                  </button>
+                  <button
+                    style={{
+                      padding: "12px",
+                      backgroundColor: "#3b82f6",
+                      color: "white",
+                      borderRadius: "6px",
+                      border: "none",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                    onClick={handleOrderSubmit}
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2
+                          size={20}
+                          style={{ marginRight: "8px", animation: "spin 1s linear infinite" }}
+                        />
+                        Processing...
+                      </>
+                    ) : (
+                      "Order"
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </section>
+
+      {/* Success Popup */}
+      {showSuccessPopup && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 50,
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "white",
+              borderRadius: "8px",
+              padding: "32px",
+              textAlign: "center",
+              maxWidth: "400px",
+            }}
+          >
+            <CheckCircle size={48} color="#22c55e" style={{ marginBottom: "16px" }} />
+            <h2 style={{ fontSize: "24px", fontWeight: "600", marginBottom: "8px" }}>Order Created Successfully!</h2>
+            <p style={{ color: "#6b7280", marginBottom: "24px" }}>
+              Your order has been submitted successfully. Click the button below to complete your payment.
+            </p>
+            <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
+              <button
+                onClick={() => {
+                  if (checkoutUrl) {
+                    window.open(checkoutUrl, '_blank');
+                    setShowSuccessPopup(false);
+                  }
+                }}
+                style={{
+                  backgroundColor: "#22c55e",
+                  color: "white",
+                  padding: "12px 24px",
+                  borderRadius: "6px",
+                  border: "none",
+                  cursor: "pointer",
+                  fontWeight: "500",
+                }}
+              >
+                Click to Make Payment
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <Footer 
