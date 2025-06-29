@@ -896,6 +896,10 @@ export const MarkingServicePage = (): JSX.Element => {
 
       })
 
+      // Clear the assignment text to allow text input again
+
+      // setAssignmentText("") - Don't clear text, let user decide
+
       toast.success("Assignment file removed")
 
     } else if (type === "instructions") {
@@ -915,6 +919,10 @@ export const MarkingServicePage = (): JSX.Element => {
         instructions: null,
 
       })
+
+      // Clear the instructions text to allow text input again
+
+      // setInstructionsText("") - Don't clear text, let user decide
 
       toast.success("Instructions file removed")
 
@@ -1886,7 +1894,11 @@ export const MarkingServicePage = (): JSX.Element => {
 
                         <textarea
 
-                          className="w-full p-3 border border-gray-300 rounded-lg h-40 resize-vertical focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className={`w-full p-3 border border-gray-300 rounded-lg h-40 resize-vertical focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+
+                            !!uploadedFiles.assignment ? 'bg-gray-100 cursor-not-allowed' : ''
+
+                          }`}
 
                           placeholder="Write text here ..."
 
@@ -1904,7 +1916,17 @@ export const MarkingServicePage = (): JSX.Element => {
 
                             onClick={() => handleFileUpload("assignment")}
 
-                            className="flex items-center px-4 py-2 border border-blue-500 text-blue-500 rounded-lg hover:bg-blue-50"
+                            disabled={!!assignmentText.trim()}
+
+                            className={`flex items-center px-4 py-2 border rounded-lg ${
+
+                              !!assignmentText.trim() 
+
+                                ? 'border-gray-300 text-gray-400 bg-gray-100 cursor-not-allowed' 
+
+                                : 'border-blue-500 text-blue-500 hover:bg-blue-50'
+
+                            }`}
 
                           >
 
@@ -1958,7 +1980,11 @@ export const MarkingServicePage = (): JSX.Element => {
 
                         <textarea
 
-                          className="w-full p-3 border border-gray-300 rounded-lg h-40 resize-vertical focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className={`w-full p-3 border border-gray-300 rounded-lg h-40 resize-vertical focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+
+                            !!uploadedFiles.instructions ? 'bg-gray-100 cursor-not-allowed' : ''
+
+                          }`}
 
                           placeholder="Write text here ..."
 
@@ -1976,7 +2002,17 @@ export const MarkingServicePage = (): JSX.Element => {
 
                             onClick={() => handleFileUpload("instructions")}
 
-                            className="flex items-center px-4 py-2 border border-blue-500 text-blue-500 rounded-lg hover:bg-blue-50"
+                            disabled={!!instructionsText.trim()}
+
+                            className={`flex items-center px-4 py-2 border rounded-lg ${
+
+                              !!instructionsText.trim() 
+
+                                ? 'border-gray-300 text-gray-400 bg-gray-100 cursor-not-allowed' 
+
+                                : 'border-blue-500 text-blue-500 hover:bg-blue-50'
+
+                            }`}
 
                           >
 
