@@ -1,100 +1,17 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React from "react";
+import { Link } from "react-router-dom";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Textarea } from "../../components/ui/textarea";
 import { Header } from "../../components/ui/header";
-import { Footer } from "../../components/ui/footer";
-import { useToastContext } from "../../contexts/ToastContext";
-import FirebaseFileUploader from "../../components/FirebaseFileUploader";
-
 const logowhite = 'https://raw.githubusercontent.com/Etherlabs-dev/studypalassets/refs/heads/main/2.png'
 const logoblack = 'https://raw.githubusercontent.com/Etherlabs-dev/studypalassets/refs/heads/main/1.png'
-
-export const MarkingServicePage = (): JSX.Element => {
-  const navigate = useNavigate();
-  const { toast } = useToastContext();
-
   // Navigation handlers for Header component
-  const handleAboutClick = () => {
-    navigate('/#about');
-  };
-  
-  const handlePricingClick = () => {
-    navigate('/#pricing');
-  };
-  
-  const handleBlogsClick = () => {
-    navigate('/blogs');
-  };
-
-  // Form state
-  const [formData, setFormData] = useState({
-    userEmail: '',
-    assignmentTitle: '',
-    assignmentText: '',
-    instructionsText: '',
-    additionalInstructions: '',
-    selectedPlan: 'premium'
-  });
-
-  // File upload state
-  const [assignmentFile, setAssignmentFile] = useState(null);
-  const [instructionsFile, setInstructionsFile] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Pricing plans data
-  const pricingPlans = [
-    {
-      id: 'basic',
-      name: 'Basic Marking',
-      price: 15,
-      originalPrice: 20,
-      discount: '25% OFF',
-      turnaround: '3-5 days',
-      features: [
-        'Detailed feedback on content and structure',
-        'Grammar and style corrections',
-        'Grade estimation with justification',
-        'Improvement suggestions'
-      ],
-      popular: false
-    },
-    {
-      id: 'premium',
-      name: 'Premium Marking',
-      price: 25,
-      originalPrice: 35,
-      discount: '29% OFF',
-      turnaround: '1-2 days',
-      features: [
-        'Everything in Basic',
-        'Line-by-line annotations',
-        'Detailed rubric assessment',
-        'Video feedback (5 minutes)',
-        'One revision round included'
-      ],
-      popular: true
-    },
-    {
-      id: 'express',
-      name: 'Express Marking',
-      price: 40,
-      originalPrice: 55,
-      discount: '27% OFF',
-      turnaround: '24 hours',
-      features: [
-        'Everything in Premium',
-        'Priority processing',
-        'Extended video feedback (10 minutes)',
-        'Two revision rounds included',
-        'Direct tutor contact'
-      ],
-      popular: false
-    }
-  ];
-
+  const handleAboutClick = () => navigate('/about');
+  const handlePricingClick = () => navigate('/pricing');
+  const handleBlogsClick = () => navigate('/blogs');
+export const MarkingServicePage = (): JSX.Element => {
   const steps = [
     { number: 1, text: "Upload Assignment" },
     { number: 2, text: "Words & Price" },
@@ -103,115 +20,10 @@ export const MarkingServicePage = (): JSX.Element => {
     { number: 5, text: "Make Payment" },
   ];
 
-  // File upload handlers
-  const handleAssignmentFileUploaded = (fileUrl, fileName, filePath) => {
-    setAssignmentFile({ url: fileUrl, name: fileName, path: filePath });
-    toast.success('Assignment file uploaded successfully!');
-  };
-
-  const handleAssignmentFileRemoved = () => {
-    setAssignmentFile(null);
-    toast.success('Assignment file removed');
-  };
-
-  const handleInstructionsFileUploaded = (fileUrl, fileName, filePath) => {
-    setInstructionsFile({ url: fileUrl, name: fileName, path: filePath });
-    toast.success('Instructions file uploaded successfully!');
-  };
-
-  const handleInstructionsFileRemoved = () => {
-    setInstructionsFile(null);
-    toast.success('Instructions file removed');
-  };
-
-  // Form handlers
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handlePlanSelect = (planId) => {
-    setFormData(prev => ({
-      ...prev,
-      selectedPlan: planId
-    }));
-  };
-
-  // Form validation
-  const isFormValid = () => {
-    return (
-      formData.userEmail.trim() !== '' &&
-      formData.assignmentTitle.trim() !== '' &&
-      (formData.assignmentText.trim() !== '' || assignmentFile !== null) &&
-      formData.selectedPlan !== ''
-    );
-  };
-
-  // Form submission
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!isFormValid()) {
-      toast.error('Please fill in all required fields');
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      const selectedPlan = pricingPlans.find(plan => plan.id === formData.selectedPlan);
-      if (!selectedPlan) {
-        throw new Error('Selected plan not found');
-      }
-
-      // Prepare checkout data with returnUrl
-      const checkoutData = {
-        userId: formData.userEmail,
-        amount: selectedPlan.price,
-        productName: "marking services",
-        customerEmail: formData.userEmail,
-        customerName: `User ${formData.userEmail}`,
-        planId: formData.selectedPlan,
-        returnUrl: "https://v0-newnow21.vercel.app/signup"
-      };
-
-      // Submit to checkout API
-      const response = await fetch('https://createcheckoutsession-inypszbbea-uc.a.run.app', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(checkoutData),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Checkout failed: ${response.status}`);
-      }
-
-      const result = await response.json();
-      
-      if (result.url) {
-        // Redirect to checkout
-        window.location.href = result.url;
-      } else {
-        throw new Error('No checkout URL received');
-      }
-
-    } catch (error) {
-      console.error('Submission error:', error);
-      toast.error('Failed to process your request. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <Header 
+            <Header 
         onAboutClick={handleAboutClick}
         onPricingClick={handlePricingClick}
         onBlogsClick={handleBlogsClick}
@@ -291,67 +103,6 @@ export const MarkingServicePage = (): JSX.Element => {
         </div>
       </section>
 
-      {/* Pricing Section */}
-      <section className="py-20 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <Badge className="mb-4 bg-blue-50 text-primary-500">Pricing Plans</Badge>
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Choose Your Marking Package</h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Select the perfect marking service for your needs. All plans include expert feedback and detailed assessment.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {pricingPlans.map((plan) => (
-              <div 
-                key={plan.id}
-                className={`relative bg-white rounded-lg p-8 ${plan.popular ? 'ring-2 ring-primary-500 shadow-lg' : 'border border-gray-200'}`}
-              >
-                {plan.popular && (
-                  <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-primary-500 text-white">
-                    Most Popular
-                  </Badge>
-                )}
-                <div className="text-center mb-8">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{plan.name}</h3>
-                  <div className="flex items-center justify-center gap-2 mb-2">
-                    <span className="text-3xl font-bold text-gray-900">${plan.price}</span>
-                    <span className="text-lg text-gray-500 line-through">${plan.originalPrice}</span>
-                  </div>
-                  <Badge variant="secondary" className="bg-green-100 text-green-700">
-                    {plan.discount}
-                  </Badge>
-                  <p className="text-gray-600 mt-2">Turnaround: {plan.turnaround}</p>
-                </div>
-
-                <ul className="space-y-3 mb-8">
-                  {plan.features.map((feature, index) => (
-                    <li key={index} className="flex items-start gap-3">
-                      <svg className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                      <span className="text-gray-600">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <Button 
-                  className={`w-full ${
-                    formData.selectedPlan === plan.id 
-                      ? 'bg-primary-500 text-white' 
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                  onClick={() => handlePlanSelect(plan.id)}
-                >
-                  {formData.selectedPlan === plan.id ? 'Selected' : 'Select Plan'}
-                </Button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Assignment Submission Section */}
       <section className="py-12 md:py-20 bg-white">
         <div className="container mx-auto px-4">
@@ -377,139 +128,98 @@ export const MarkingServicePage = (): JSX.Element => {
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-6 md:space-y-8">
-              {/* Contact Information */}
+            <div className="space-y-6 md:space-y-8">
               <div>
-                <label className="block text-gray-700 font-medium mb-2">
-                  Email Address <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  type="email"
-                  name="userEmail"
-                  value={formData.userEmail}
-                  onChange={handleInputChange}
-                  placeholder="Enter your email address"
-                  required
-                  className="w-full"
-                />
-              </div>
-
-              {/* Assignment Title */}
-              <div>
-                <label className="block text-gray-700 font-medium mb-2">
-                  Assignment Title <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  type="text"
-                  name="assignmentTitle"
-                  value={formData.assignmentTitle}
-                  onChange={handleInputChange}
-                  placeholder="Enter assignment title"
-                  required
-                  className="w-full"
-                />
-              </div>
-
-              {/* Assignment */}
-              <div>
-                <label className="block text-gray-700 font-medium mb-2">
-                  Assignments <span className="text-red-500">*</span>
-                </label>
+                <label className="block text-gray-700 font-medium mb-2">Assignments</label>
                 <Textarea 
-                  name="assignmentText"
-                  value={formData.assignmentText}
-                  onChange={handleInputChange}
                   placeholder="Write text here ..."
                   className="w-full h-32 p-4 border border-gray-200 rounded-lg"
-                  disabled={!!assignmentFile}
                 />
-                <div className="mt-4">
-                  <FirebaseFileUploader
-                    userId={formData.userEmail || 'anonymous'}
-                    onFileUploaded={handleAssignmentFileUploaded}
-                    onFileRemoved={handleAssignmentFileRemoved}
-                    buttonText="Or Upload File"
-                    accept=".txt,.pdf,.doc,.docx"
-                    maxSizeMB={10}
-                  />
-                </div>
+                <Button variant="outline" className="mt-4 flex items-center gap-2">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M17.5 12.5V15.8333C17.5 16.2754 17.3244 16.6993 17.0118 17.0118C16.6993 17.3244 16.2754 17.5 15.8333 17.5H4.16667C3.72464 17.5 3.30072 17.3244 2.98816 17.0118C2.67559 16.6993 2.5 16.2754 2.5 15.8333V12.5M5.83333 8.33333L10 12.5M10 12.5L14.1667 8.33333M10 12.5V2.5" stroke="currentColor" strokeWidth="1.67" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  Or Upload File
+                </Button>
               </div>
 
-              {/* Assignment Instructions */}
               <div>
                 <label className="block text-gray-700 font-medium mb-2">Assignment Instructions</label>
                 <Textarea 
-                  name="instructionsText"
-                  value={formData.instructionsText}
-                  onChange={handleInputChange}
                   placeholder="Write text here ..."
                   className="w-full h-32 p-4 border border-gray-200 rounded-lg"
-                  disabled={!!instructionsFile}
                 />
-                <div className="mt-4">
-                  <FirebaseFileUploader
-                    userId={formData.userEmail || 'anonymous'}
-                    onFileUploaded={handleInstructionsFileUploaded}
-                    onFileRemoved={handleInstructionsFileRemoved}
-                    buttonText="Or Upload File"
-                    accept=".txt,.pdf,.doc,.docx"
-                    maxSizeMB={10}
-                  />
-                </div>
+                <Button variant="outline" className="mt-4 flex items-center gap-2">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M17.5 12.5V15.8333C17.5 16.2754 17.3244 16.6993 17.0118 17.0118C16.6993 17.3244 16.2754 17.5 15.8333 17.5H4.16667C3.72464 17.5 3.30072 17.3244 2.98816 17.0118C2.67559 16.6993 2.5 16.2754 2.5 15.8333V12.5M5.83333 8.33333L10 12.5M10 12.5L14.1667 8.33333M10 12.5V2.5" stroke="currentColor" strokeWidth="1.67" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  Or Upload File
+                </Button>
               </div>
 
-              {/* Additional Instructions */}
-              <div>
-                <label className="block text-gray-700 font-medium mb-2">Additional Instructions (Optional)</label>
-                <Textarea 
-                  name="additionalInstructions"
-                  value={formData.additionalInstructions}
-                  onChange={handleInputChange}
-                  placeholder="Any specific requirements or instructions for marking..."
-                  className="w-full h-24 p-4 border border-gray-200 rounded-lg"
-                />
-              </div>
-
-              {/* Selected Plan Summary */}
-              {formData.selectedPlan && (
-                <div className="bg-blue-50 p-6 rounded-lg">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Summary</h3>
-                  {(() => {
-                    const selectedPlan = pricingPlans.find(plan => plan.id === formData.selectedPlan);
-                    return selectedPlan ? (
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <p className="font-medium text-gray-900">{selectedPlan.name}</p>
-                          <p className="text-sm text-gray-600">Turnaround: {selectedPlan.turnaround}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-2xl font-bold text-gray-900">${selectedPlan.price}</p>
-                          <p className="text-sm text-gray-500 line-through">${selectedPlan.originalPrice}</p>
-                        </div>
-                      </div>
-                    ) : null;
-                  })()}
-                </div>
-              )}
-
-              <Button 
-                type="submit"
-                disabled={!isFormValid() || isSubmitting}
-                className="w-full bg-primary-500 hover:bg-primary-600 text-white py-3"
-              >
-                {isSubmitting ? 'Processing...' : 'Proceed to Payment'}
+              <Button className="w-full bg-primary-500 hover:bg-primary-600 text-white py-3">
+                Next
               </Button>
-            </form>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <Footer 
-        onAboutClick={handleAboutClick}
-        onPricingClick={handlePricingClick}
-        onBlogsClick={handleBlogsClick}
-      />
+      <footer className="bg-black text-white py-12 md:py-16">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="col-span-1">
+              <img src={logowhite} alt="My Study Pal" className="h-12 mb-6" />
+              <p className="text-gray-400">
+                Helping students learn better, write smarter, and achieve more with powerful AI academic tools.
+              </p>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium mb-4">Quick Links</h3>
+              <ul className="space-y-3">
+                <li><Link to="#" className="text-gray-400 hover:text-white">About Us</Link></li>
+                <li><Link to="#" className="text-gray-400 hover:text-white">Pricing</Link></li>
+                <li><Link to="/blogs" className="text-gray-400 hover:text-white">Blogs</Link></li>
+                <li><Link to="/affiliate-program" className="text-gray-400 hover:text-white">Affiliate Program</Link></li>
+                <li><Link to="#" className="text-gray-400 hover:text-white">Contact Us</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium mb-4">Writing Tools</h3>
+              <ul className="space-y-3">
+                <li><Link to="#" className="text-gray-400 hover:text-white">Assignment Feedback</Link></li>
+                <li><Link to="#" className="text-gray-400 hover:text-white">Paraphrasing</Link></li>
+                <li><Link to="#" className="text-gray-400 hover:text-white">Grammar Checker</Link></li>
+                <li><Link to="#" className="text-gray-400 hover:text-white">Outline Generator</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium mb-4">Stay up to date</h3>
+              <div className="flex gap-4">
+                <Input
+                  type="email"
+                  placeholder="Enter your email"
+                  className="bg-white text-black"
+                />
+                <Button className="bg-primary-500">
+                  Subscribe
+                </Button>
+              </div>
+            </div>
+          </div>
+          <div className="mt-12 pt-8 border-t border-gray-800">
+            <div className="flex flex-col md:flex-row justify-between items-center">
+              <p className="text-gray-400">© 2077 My Study Pal. All rights reserved.</p>
+              <div className="flex space-x-6 mt-4 md:mt-0">
+                <Link to="/terms" className="text-gray-400 hover:text-white">Terms</Link>
+                <Link to="/privacy" className="text-gray-400 hover:text-white">Privacy</Link>
+                <Link to="/cookies" className="text-gray-400 hover:text-white">Cookies</Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
