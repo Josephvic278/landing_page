@@ -880,36 +880,7 @@ export const MarkingServicePage = (): JSX.Element => {
             <div>
               {/* Custom Tab Navigation */}
               <div className="flex flex-wrap border border-gray-200 rounded-lg mb-8 overflow-hidden">
-                <button
-                  className={`flex-1 min-w-[120px] px-4 py-3 text-sm font-medium text-center ${
-                    activeTab === "new" 
-                      ? "bg-blue-500 text-white" 
-                      : "bg-gray-50 text-gray-600 hover:bg-gray-100"
-                  }`}
-                  onClick={() => handleTabChange("new")}
-                >
-                  Start New Order
-                </button>
-                <button
-                  className={`flex-1 min-w-[120px] px-4 py-3 text-sm font-medium text-center ${
-                    activeTab === "submitted" 
-                      ? "bg-blue-500 text-white" 
-                      : "bg-gray-50 text-gray-600 hover:bg-gray-100"
-                  }`}
-                  onClick={() => handleTabChange("submitted")}
-                >
-                  Submitted Orders
-                </button>
-                <button
-                  className={`flex-1 min-w-[120px] px-4 py-3 text-sm font-medium text-center ${
-                    activeTab === "completed" 
-                      ? "bg-blue-500 text-white" 
-                      : "bg-gray-50 text-gray-600 hover:bg-gray-100"
-                  }`}
-                  onClick={() => handleTabChange("completed")}
-                >
-                  Completed Orders
-                </button>
+
               </div>
 
               {activeTab === "new" ? (
