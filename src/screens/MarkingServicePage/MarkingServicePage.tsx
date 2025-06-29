@@ -3236,22 +3236,6 @@ export const MarkingServicePage = (): JSX.Element => {
 
                 onClick={() => {
 
-                  setShowSuccessPopup(false);
-
-                }}
-
-                className="px-6 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 font-medium"
-
-              >
-
-                Close
-
-              </button>
-
-              <button
-
-                onClick={() => {
-
                   if (checkoutUrl) {
 
                     window.open(checkoutUrl, '_blank');
