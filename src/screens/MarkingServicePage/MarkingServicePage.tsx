@@ -7,6 +7,7 @@ import {
   Upload,
   FileText,
   Calendar,
+  X,
 } from "lucide-react";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
@@ -63,6 +64,11 @@ export const MarkingServicePage = (): JSX.Element => {
     totalAmount: "",
   });
 
+  // File input refs
+  const assignmentFileInputRef = useRef(null);
+  const instructionsFileInputRef = useRef(null);
+  const additionalFileInputRef = useRef(null);
+
   // Navigation handlers for Header component
   const handleAboutClick = () => {
     navigate('/#about');
@@ -76,20 +82,84 @@ export const MarkingServicePage = (): JSX.Element => {
     navigate('/blogs');
   };
 
-  // File upload handlers (simplified for this example)
-  const handleAssignmentFileUploaded = (fileUrl, fileName) => {
-    setUploadedFiles({
-      ...uploadedFiles,
-      assignment: {
-        name: fileName,
-        size: "Unknown",
-        url: fileUrl,
-      },
-    });
-    setAssignmentFile({ name: fileName, url: fileUrl });
+  // File upload function
+  const uploadFile = async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await fetch('https://uploadfile-inypszbbea-uc.a.run.app', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Upload failed with status ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.success && result.blobPath) {
+        return {
+          success: true,
+          blobPath: result.blobPath,
+          fileName: file.name,
+          fileSize: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
+        };
+      } else {
+        throw new Error(result.message || 'Upload failed');
+      }
+    } catch (error) {
+      console.error('File upload error:', error);
+      throw error;
+    }
   };
 
-  const handleAssignmentFileRemoved = () => {
+  // Assignment file upload handlers
+  const handleAssignmentFileUpload = async () => {
+    if (assignmentFileInputRef.current) {
+      assignmentFileInputRef.current.click();
+    }
+  };
+
+  const handleAssignmentFileChange = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    try {
+      setIsSubmitting(true);
+      const uploadResult = await uploadFile(file);
+      
+      if (uploadResult.success) {
+        const fileData = {
+          name: uploadResult.fileName,
+          size: uploadResult.fileSize,
+          url: uploadResult.blobPath,
+        };
+
+        setUploadedFiles({
+          ...uploadedFiles,
+          assignment: fileData,
+        });
+        setAssignmentFile(fileData);
+        
+        // Clear assignment text when file is uploaded
+        setAssignmentText("");
+        
+        toast.success('Assignment file uploaded successfully!');
+      }
+    } catch (error) {
+      toast.error(`Failed to upload file: ${error.message}`);
+    } finally {
+      setIsSubmitting(false);
+      // Reset file input
+      if (assignmentFileInputRef.current) {
+        assignmentFileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleAssignmentFileRemove = () => {
     setUploadedFiles({
       ...uploadedFiles,
       assignment: null,
@@ -97,19 +167,51 @@ export const MarkingServicePage = (): JSX.Element => {
     setAssignmentFile(null);
   };
 
-  const handleInstructionsFileUploaded = (fileUrl, fileName) => {
-    setUploadedFiles({
-      ...uploadedFiles,
-      instructions: {
-        name: fileName,
-        size: "Unknown",
-        url: fileUrl,
-      },
-    });
-    setInstructionsFile({ name: fileName, url: fileUrl });
+  // Instructions file upload handlers
+  const handleInstructionsFileUpload = async () => {
+    if (instructionsFileInputRef.current) {
+      instructionsFileInputRef.current.click();
+    }
   };
 
-  const handleInstructionsFileRemoved = () => {
+  const handleInstructionsFileChange = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    try {
+      setIsSubmitting(true);
+      const uploadResult = await uploadFile(file);
+      
+      if (uploadResult.success) {
+        const fileData = {
+          name: uploadResult.fileName,
+          size: uploadResult.fileSize,
+          url: uploadResult.blobPath,
+        };
+
+        setUploadedFiles({
+          ...uploadedFiles,
+          instructions: fileData,
+        });
+        setInstructionsFile(fileData);
+        
+        // Clear instructions text when file is uploaded
+        setInstructionsText("");
+        
+        toast.success('Instructions file uploaded successfully!');
+      }
+    } catch (error) {
+      toast.error(`Failed to upload file: ${error.message}`);
+    } finally {
+      setIsSubmitting(false);
+      // Reset file input
+      if (instructionsFileInputRef.current) {
+        instructionsFileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleInstructionsFileRemove = () => {
     setUploadedFiles({
       ...uploadedFiles,
       instructions: null,
@@ -117,20 +219,48 @@ export const MarkingServicePage = (): JSX.Element => {
     setInstructionsFile(null);
   };
 
-  const handleAdditionalInstructionsFileUploaded = (fileUrl, fileName) => {
-    const newFile = {
-      name: fileName,
-      size: "Unknown",
-      url: fileUrl,
-    };
-    setUploadedFiles({
-      ...uploadedFiles,
-      additionalInstructions: [...uploadedFiles.additionalInstructions, newFile],
-    });
-    setAdditionalInstructionsFiles([...additionalInstructionsFiles, { name: fileName, url: fileUrl }]);
+  // Additional files upload handlers
+  const handleAdditionalFileUpload = async () => {
+    if (additionalFileInputRef.current) {
+      additionalFileInputRef.current.click();
+    }
   };
 
-  const handleAdditionalInstructionsFileRemoved = (index) => {
+  const handleAdditionalFileChange = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    try {
+      setIsSubmitting(true);
+      const uploadResult = await uploadFile(file);
+      
+      if (uploadResult.success) {
+        const fileData = {
+          name: uploadResult.fileName,
+          size: uploadResult.fileSize,
+          url: uploadResult.blobPath,
+        };
+
+        setUploadedFiles({
+          ...uploadedFiles,
+          additionalInstructions: [...uploadedFiles.additionalInstructions, fileData],
+        });
+        setAdditionalInstructionsFiles([...additionalInstructionsFiles, fileData]);
+        
+        toast.success('Additional file uploaded successfully!');
+      }
+    } catch (error) {
+      toast.error(`Failed to upload file: ${error.message}`);
+    } finally {
+      setIsSubmitting(false);
+      // Reset file input
+      if (additionalFileInputRef.current) {
+        additionalFileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleAdditionalFileRemove = (index) => {
     const newAdditionalInstructions = [...uploadedFiles.additionalInstructions];
     newAdditionalInstructions.splice(index, 1);
 
@@ -287,6 +417,18 @@ export const MarkingServicePage = (): JSX.Element => {
       
       if (!orderDetails.title.trim()) {
         toast.error("Please enter a title for your assignment");
+        return;
+      }
+
+      // Check if either assignment text or file is provided
+      if (!assignmentText.trim() && !uploadedFiles.assignment) {
+        toast.error("Please provide assignment content either as text or upload a file");
+        return;
+      }
+
+      // Check if either instructions text or file is provided
+      if (!instructionsText.trim() && !uploadedFiles.instructions) {
+        toast.error("Please provide assignment instructions either as text or upload a file");
         return;
       }
 
@@ -479,6 +621,29 @@ export const MarkingServicePage = (): JSX.Element => {
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Hidden file inputs */}
+      <input
+        type="file"
+        ref={assignmentFileInputRef}
+        onChange={handleAssignmentFileChange}
+        accept=".pdf,.doc,.docx,.txt"
+        style={{ display: 'none' }}
+      />
+      <input
+        type="file"
+        ref={instructionsFileInputRef}
+        onChange={handleInstructionsFileChange}
+        accept=".pdf,.doc,.docx,.txt"
+        style={{ display: 'none' }}
+      />
+      <input
+        type="file"
+        ref={additionalFileInputRef}
+        onChange={handleAdditionalFileChange}
+        accept=".pdf,.doc,.docx,.txt"
+        style={{ display: 'none' }}
+      />
+
       {/* Header */}
       <Header 
         onAboutClick={handleAboutClick}
@@ -538,57 +703,167 @@ export const MarkingServicePage = (): JSX.Element => {
                   />
                 </div>
 
-                <div style={{ marginBottom: "32px" }}>
-                  <h3 style={{ fontSize: "18px", fontWeight: "500", marginBottom: "16px" }}>Assignments</h3>
-                  <textarea
-                    style={{
-                      width: "100%",
-                      padding: "12px",
-                      border: "1px solid #d1d5db",
-                      borderRadius: "6px",
-                      height: "160px",
-                      resize: "vertical",
-                      outline: "none",
-                    }}
-                    placeholder="Write text here ..."
-                    value={assignmentText}
-                    onChange={(e) => setAssignmentText(e.target.value)}
-                    disabled={!!uploadedFiles.assignment}
-                  ></textarea>
-                  <Button variant="outline" className="mt-4 flex items-center gap-2">
-                    <Upload size={20} />
-                    Or Upload File
-                  </Button>
-                </div>
-
+                {/* Assignment Section */}
                 <div style={{ marginBottom: "32px" }}>
                   <h3 style={{ fontSize: "18px", fontWeight: "500", marginBottom: "16px" }}>
-                    Assignment Instructions
+                    Assignments <span style={{ color: "#ef4444" }}>*</span>
                   </h3>
-                  <textarea
-                    style={{
-                      width: "100%",
-                      padding: "12px",
+                  
+                  {/* Show uploaded file or text area */}
+                  {uploadedFiles.assignment ? (
+                    <div style={{
                       border: "1px solid #d1d5db",
                       borderRadius: "6px",
-                      height: "160px",
-                      resize: "vertical",
-                      outline: "none",
+                      padding: "16px",
+                      backgroundColor: "#f9fafb",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between"
+                    }}>
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <FileText size={20} color="#3b82f6" style={{ marginRight: "8px" }} />
+                        <div>
+                          <p style={{ fontWeight: "500", margin: "0" }}>{uploadedFiles.assignment.name}</p>
+                          <p style={{ fontSize: "12px", color: "#6b7280", margin: "0" }}>
+                            {uploadedFiles.assignment.size}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={handleAssignmentFileRemove}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          color: "#ef4444",
+                          cursor: "pointer",
+                          padding: "4px",
+                        }}
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  ) : (
+                    <textarea
+                      style={{
+                        width: "100%",
+                        padding: "12px",
+                        border: "1px solid #d1d5db",
+                        borderRadius: "6px",
+                        height: "160px",
+                        resize: "vertical",
+                        outline: "none",
+                      }}
+                      placeholder="Write text here ..."
+                      value={assignmentText}
+                      onChange={(e) => setAssignmentText(e.target.value)}
+                    />
+                  )}
+                  
+                  <button
+                    onClick={handleAssignmentFileUpload}
+                    disabled={!!assignmentText.trim() || isSubmitting}
+                    style={{
+                      marginTop: "16px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: "8px 16px",
+                      border: "1px solid #3b82f6",
+                      color: assignmentText.trim() ? "#9ca3af" : "#3b82f6",
+                      borderColor: assignmentText.trim() ? "#d1d5db" : "#3b82f6",
+                      borderRadius: "6px",
+                      background: "none",
+                      cursor: assignmentText.trim() ? "not-allowed" : "pointer",
                     }}
-                    placeholder="Write text here ..."
-                    value={instructionsText}
-                    onChange={(e) => setInstructionsText(e.target.value)}
-                    disabled={!!uploadedFiles.instructions}
-                  ></textarea>
-                  <Button variant="outline" className="mt-4 flex items-center gap-2">
+                  >
                     <Upload size={20} />
                     Or Upload File
-                  </Button>
+                  </button>
+                </div>
+
+                {/* Instructions Section */}
+                <div style={{ marginBottom: "32px" }}>
+                  <h3 style={{ fontSize: "18px", fontWeight: "500", marginBottom: "16px" }}>
+                    Assignment Instructions <span style={{ color: "#ef4444" }}>*</span>
+                  </h3>
+                  
+                  {/* Show uploaded file or text area */}
+                  {uploadedFiles.instructions ? (
+                    <div style={{
+                      border: "1px solid #d1d5db",
+                      borderRadius: "6px",
+                      padding: "16px",
+                      backgroundColor: "#f9fafb",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between"
+                    }}>
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <FileText size={20} color="#3b82f6" style={{ marginRight: "8px" }} />
+                        <div>
+                          <p style={{ fontWeight: "500", margin: "0" }}>{uploadedFiles.instructions.name}</p>
+                          <p style={{ fontSize: "12px", color: "#6b7280", margin: "0" }}>
+                            {uploadedFiles.instructions.size}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={handleInstructionsFileRemove}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          color: "#ef4444",
+                          cursor: "pointer",
+                          padding: "4px",
+                        }}
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  ) : (
+                    <textarea
+                      style={{
+                        width: "100%",
+                        padding: "12px",
+                        border: "1px solid #d1d5db",
+                        borderRadius: "6px",
+                        height: "160px",
+                        resize: "vertical",
+                        outline: "none",
+                      }}
+                      placeholder="Write text here ..."
+                      value={instructionsText}
+                      onChange={(e) => setInstructionsText(e.target.value)}
+                    />
+                  )}
+
+                  <button
+                    onClick={handleInstructionsFileUpload}
+                    disabled={!!instructionsText.trim() || isSubmitting}
+                    style={{
+                      marginTop: "16px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: "8px 16px",
+                      border: "1px solid #3b82f6",
+                      color: instructionsText.trim() ? "#9ca3af" : "#3b82f6",
+                      borderColor: instructionsText.trim() ? "#d1d5db" : "#3b82f6",
+                      borderRadius: "6px",
+                      background: "none",
+                      cursor: instructionsText.trim() ? "not-allowed" : "pointer",
+                    }}
+                  >
+                    <Upload size={20} />
+                    Or Upload File
+                  </button>
                 </div>
 
                 {/* Word count input */}
                 <div style={{ marginBottom: "32px" }}>
-                  <h3 style={{ fontSize: "18px", fontWeight: "500", marginBottom: "16px" }}>Word Count</h3>
+                  <h3 style={{ fontSize: "18px", fontWeight: "500", marginBottom: "16px" }}>
+                    Word Count <span style={{ color: "#ef4444" }}>*</span>
+                  </h3>
                   <input
                     type="number"
                     style={{
@@ -605,7 +880,9 @@ export const MarkingServicePage = (): JSX.Element => {
                 </div>
 
                 <div style={{ marginBottom: "32px" }}>
-                  <h3 style={{ fontSize: "18px", fontWeight: "500", marginBottom: "16px" }}>Assignment Title</h3>
+                  <h3 style={{ fontSize: "18px", fontWeight: "500", marginBottom: "16px" }}>
+                    Assignment Title <span style={{ color: "#ef4444" }}>*</span>
+                  </h3>
                   <input
                     type="text"
                     style={{
@@ -1040,10 +1317,71 @@ export const MarkingServicePage = (): JSX.Element => {
                     onChange={(e) => setAdditionalInstructionsText(e.target.value)}
                   ></textarea>
 
-                  <Button variant="outline" className="mt-4 flex items-center gap-2">
+                  <button
+                    onClick={handleAdditionalFileUpload}
+                    disabled={isSubmitting}
+                    style={{
+                      marginTop: "16px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: "8px 16px",
+                      border: "1px solid #3b82f6",
+                      color: "#3b82f6",
+                      borderRadius: "6px",
+                      background: "none",
+                      cursor: "pointer",
+                    }}
+                  >
                     <Upload size={20} />
                     Upload File
-                  </Button>
+                  </button>
+
+                  {/* Display uploaded additional files */}
+                  {uploadedFiles.additionalInstructions.length > 0 && (
+                    <div style={{ marginTop: "16px" }}>
+                      <h4 style={{ fontSize: "16px", fontWeight: "500", marginBottom: "8px" }}>
+                        Uploaded Files:
+                      </h4>
+                      {uploadedFiles.additionalInstructions.map((file, index) => (
+                        <div
+                          key={index}
+                          style={{
+                            border: "1px solid #d1d5db",
+                            borderRadius: "6px",
+                            padding: "12px",
+                            backgroundColor: "#f9fafb",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            marginBottom: "8px",
+                          }}
+                        >
+                          <div style={{ display: "flex", alignItems: "center" }}>
+                            <FileText size={20} color="#3b82f6" style={{ marginRight: "8px" }} />
+                            <div>
+                              <p style={{ fontWeight: "500", margin: "0" }}>{file.name}</p>
+                              <p style={{ fontSize: "12px", color: "#6b7280", margin: "0" }}>
+                                {file.size}
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleAdditionalFileRemove(index)}
+                            style={{
+                              background: "none",
+                              border: "none",
+                              color: "#ef4444",
+                              cursor: "pointer",
+                              padding: "4px",
+                            }}
+                          >
+                            <X size={16} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div
@@ -1124,6 +1462,46 @@ export const MarkingServicePage = (): JSX.Element => {
                       <p style={{ fontSize: "14px", color: "#6b7280", marginBottom: "4px" }}>Turnaround Time</p>
                       <p style={{ margin: "0" }}>{orderDetails.turnaroundTime}</p>
                     </div>
+                  </div>
+
+                  {/* Show uploaded files summary */}
+                  <div
+                    style={{
+                      borderBottom: "1px solid #e5e7eb",
+                      paddingBottom: "16px",
+                      marginBottom: "16px",
+                    }}
+                  >
+                    <h4 style={{ fontSize: "16px", fontWeight: "500", marginBottom: "12px" }}>Files & Content</h4>
+                    
+                    <div style={{ marginBottom: "12px" }}>
+                      <p style={{ fontSize: "14px", color: "#6b7280", marginBottom: "4px" }}>Assignment</p>
+                      {uploadedFiles.assignment ? (
+                        <p style={{ margin: "0", color: "#22c55e" }}>✓ File uploaded: {uploadedFiles.assignment.name}</p>
+                      ) : (
+                        <p style={{ margin: "0", color: "#3b82f6" }}>✓ Text content provided</p>
+                      )}
+                    </div>
+
+                    <div style={{ marginBottom: "12px" }}>
+                      <p style={{ fontSize: "14px", color: "#6b7280", marginBottom: "4px" }}>Instructions</p>
+                      {uploadedFiles.instructions ? (
+                        <p style={{ margin: "0", color: "#22c55e" }}>✓ File uploaded: {uploadedFiles.instructions.name}</p>
+                      ) : (
+                        <p style={{ margin: "0", color: "#3b82f6" }}>✓ Text content provided</p>
+                      )}
+                    </div>
+
+                    {uploadedFiles.additionalInstructions.length > 0 && (
+                      <div>
+                        <p style={{ fontSize: "14px", color: "#6b7280", marginBottom: "4px" }}>Additional Files</p>
+                        {uploadedFiles.additionalInstructions.map((file, index) => (
+                          <p key={index} style={{ margin: "0", color: "#22c55e" }}>
+                            ✓ {file.name}
+                          </p>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <div
