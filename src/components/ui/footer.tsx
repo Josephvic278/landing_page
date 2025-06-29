@@ -133,14 +133,14 @@ export const Footer = ({ onAboutClick, onPricingClick, onBlogsClick }: FooterPro
             </div>
 
             {/* Newsletter subscription */}
-            <div className="flex flex-col w-full md:w-80 items-start gap-4">
+            <div className="flex flex-col w-full md:w-96 lg:w-[420px] items-start gap-4">
               <h3 className="text-basewhite font-text-sm-font-medium">
                 Stay up to date
               </h3>
               <div className="flex items-start gap-4 w-full">
                 <div className="flex-1">
                   <Input
-                    className="bg-basewhite text-gray-500 font-text-base-font-normal border-[#cfd4dc]"
+                    className="bg-basewhite text-gray-500 font-text-base-font-normal border-[#cfd4dc] w-full"
                     placeholder="Enter your email"
                   />
                 </div>
