@@ -182,6 +182,8 @@ export const MarkingServicePage = (): JSX.Element => {
 
   // State management
 
+  const [userEmail, setUserEmail] = useState("")
+
   const [userEnteredWordCount, setUserEnteredWordCount] = useState("")
 
   const [activeTab, setActiveTab] = useState("new")
@@ -225,8 +227,6 @@ export const MarkingServicePage = (): JSX.Element => {
     assignment: null,
 
     instructions: null,
-
-    additionalInstructions: [],
 
     additional: [],
 
@@ -622,6 +622,30 @@ export const MarkingServicePage = (): JSX.Element => {
 
       // Validate inputs
 
+      if (!userEmail.trim()) {
+
+        toast.error("Please enter your email address")
+
+        return
+
+      }
+
+      
+
+      // Basic email validation
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+      if (!emailRegex.test(userEmail)) {
+
+        toast.error("Please enter a valid email address")
+
+        return
+
+      }
+
+      
+
       if (!userEnteredWordCount || Number.parseInt(userEnteredWordCount) <= 0) {
 
         toast.error("Please enter a valid word count")
@@ -714,7 +738,7 @@ export const MarkingServicePage = (): JSX.Element => {
 
   }
 
-  // Handle file upload - Fixed version without API dependency
+  // Handle file upload - Fixed version
 
   const handleFileUpload = async (type) => {
 
@@ -782,6 +806,8 @@ export const MarkingServicePage = (): JSX.Element => {
 
           file: file, // Store the actual file object for later use
 
+          url: URL.createObjectURL(file), // Create a local URL for the file
+
         }
 
         // Update state based on upload type
@@ -796,6 +822,8 @@ export const MarkingServicePage = (): JSX.Element => {
 
           }))
 
+          setAssignmentText("") // Clear text when file is uploaded
+
           toast.success(`Assignment file "${file.name}" uploaded successfully`)
 
         } else if (type === "instructions") {
@@ -807,6 +835,8 @@ export const MarkingServicePage = (): JSX.Element => {
             instructions: fileData,
 
           }))
+
+          setInstructionsText("") // Clear text when file is uploaded
 
           toast.success(`Instructions file "${file.name}" uploaded successfully`)
 
@@ -850,6 +880,14 @@ export const MarkingServicePage = (): JSX.Element => {
 
     if (type === "assignment") {
 
+      // Revoke the object URL to free memory
+
+      if (uploadedFiles.assignment?.url) {
+
+        URL.revokeObjectURL(uploadedFiles.assignment.url)
+
+      }
+
       setUploadedFiles({
 
         ...uploadedFiles,
@@ -861,6 +899,14 @@ export const MarkingServicePage = (): JSX.Element => {
       toast.success("Assignment file removed")
 
     } else if (type === "instructions") {
+
+      // Revoke the object URL to free memory
+
+      if (uploadedFiles.instructions?.url) {
+
+        URL.revokeObjectURL(uploadedFiles.instructions.url)
+
+      }
 
       setUploadedFiles({
 
@@ -877,6 +923,18 @@ export const MarkingServicePage = (): JSX.Element => {
       const newAdditional = [...uploadedFiles.additional]
 
       const removedFile = newAdditional.splice(index, 1)[0]
+
+      
+
+      // Revoke the object URL to free memory
+
+      if (removedFile?.url) {
+
+        URL.revokeObjectURL(removedFile.url)
+
+      }
+
+      
 
       setUploadedFiles({
 
@@ -926,6 +984,8 @@ export const MarkingServicePage = (): JSX.Element => {
 
   }
 
+  // Updated handleOrderSubmit function
+
   const handleOrderSubmit = async () => {
 
     try {
@@ -964,7 +1024,7 @@ export const MarkingServicePage = (): JSX.Element => {
 
       const orderData = {
 
-        userId: USER_ID,
+        userId: userEmail,
 
         assignmentTitle: orderDetails.title,
 
@@ -984,9 +1044,9 @@ export const MarkingServicePage = (): JSX.Element => {
 
         supportingMaterial: additionalInstructionsText || "", 
 
-        supportingMaterialUrl: uploadedFiles.additionalInstructions.length > 0 ? 
+        supportingMaterialUrl: uploadedFiles.additional.length > 0 ? 
 
-          uploadedFiles.additionalInstructions[0].url : "",
+          uploadedFiles.additional[0].url : "",
 
       };
 
@@ -1030,9 +1090,9 @@ export const MarkingServicePage = (): JSX.Element => {
 
       
 
-      // Create a simple planId using timestamp and user ID
+      // Create a simple planId using timestamp and user email
 
-      const planId = `${USER_ID}-${Date.now()}`;
+      const planId = `${userEmail}-${Date.now()}`;
 
       
 
@@ -1040,21 +1100,21 @@ export const MarkingServicePage = (): JSX.Element => {
 
       const checkoutData = {
 
-        userId: USER_ID,
+        userId: userEmail,
 
         amount: amount,
 
         productName: "marking services",
 
-        customerEmail: `user-${USER_ID}@example.com`,
+        customerEmail: userEmail,
 
-        customerName: `User ${USER_ID}`,
+        customerName: `User ${userEmail}`,
 
-        planId: planId
+        planId: planId,
+
+        returnUrl: "https://v0-newnow21.vercel.app/signup"
 
       };
-
-      
 
       
 
@@ -1112,7 +1172,7 @@ export const MarkingServicePage = (): JSX.Element => {
 
       console.error("Error in order or payment process:", error);
 
-      alert(`Failed: ${error.message}`);
+      toast.error(`Failed: ${error.message}`);
 
     } finally {
 
@@ -1797,6 +1857,28 @@ export const MarkingServicePage = (): JSX.Element => {
                   {currentStep === 1 && (
 
                     <div className="max-w-2xl mx-auto">
+
+                      <div className="mb-8">
+
+                        <h3 className="text-lg font-medium mb-4">Email Address</h3>
+
+                        <input
+
+                          type="email"
+
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+
+                          placeholder="Enter your email address"
+
+                          value={userEmail}
+
+                          onChange={(e) => setUserEmail(e.target.value)}
+
+                        />
+
+                      </div>
+
+                      
 
                       <div className="mb-8">
 
@@ -2508,6 +2590,16 @@ export const MarkingServicePage = (): JSX.Element => {
 
                         <div className="border-b border-gray-200 pb-4 mb-4">
 
+                          <p className="text-sm text-gray-600 mb-1">Email Address</p>
+
+                          <p className="font-medium">{userEmail}</p>
+
+                        </div>
+
+                        
+
+                        <div className="border-b border-gray-200 pb-4 mb-4">
+
                           <p className="text-sm text-gray-600 mb-1">Assignment Title</p>
 
                           <p className="font-medium">{orderDetails.title}</p>
@@ -2556,9 +2648,19 @@ export const MarkingServicePage = (): JSX.Element => {
 
                               </div>
 
+                            ) : assignmentText ? (
+
+                              <p className="text-gray-700 bg-white p-2 rounded border text-sm">
+
+                                {assignmentText.substring(0, 100)}
+
+                                {assignmentText.length > 100 && "..."}
+
+                              </p>
+
                             ) : (
 
-                              <p className="text-gray-400">No file uploaded</p>
+                              <p className="text-gray-400">No assignment provided</p>
 
                             )}
 
@@ -2584,9 +2686,19 @@ export const MarkingServicePage = (): JSX.Element => {
 
                               </div>
 
+                            ) : instructionsText ? (
+
+                              <p className="text-gray-700 bg-white p-2 rounded border text-sm">
+
+                                {instructionsText.substring(0, 100)}
+
+                                {instructionsText.length > 100 && "..."}
+
+                              </p>
+
                             ) : (
 
-                              <p className="text-gray-400">No file uploaded</p>
+                              <p className="text-gray-400">No instructions provided</p>
 
                             )}
 
@@ -3088,11 +3200,31 @@ export const MarkingServicePage = (): JSX.Element => {
 
                 onClick={() => {
 
+                  setShowSuccessPopup(false);
+
+                }}
+
+                className="px-6 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 font-medium"
+
+              >
+
+                Close
+
+              </button>
+
+              <button
+
+                onClick={() => {
+
                   if (checkoutUrl) {
 
                     window.open(checkoutUrl, '_blank');
 
                     setShowSuccessPopup(false);
+
+                  } else {
+
+                    toast.error("Payment link not available");
 
                   }
 
@@ -3100,9 +3232,11 @@ export const MarkingServicePage = (): JSX.Element => {
 
                 className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 font-medium"
 
+                disabled={!checkoutUrl}
+
               >
 
-                Click to Make Payment
+                Complete Payment
 
               </button>
 
