@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
@@ -12,6 +12,10 @@ const logoblack = 'https://raw.githubusercontent.com/Etherlabs-dev/studypalasset
 
 export const MarkingServicePage = (): JSX.Element => {
   const navigate = useNavigate();
+  
+  // Form state
+  const [assignment, setAssignment] = useState('');
+  const [instructions, setInstructions] = useState('');
 
   // Navigation handlers for Header component
   const handleAboutClick = () => {
@@ -24,6 +28,83 @@ export const MarkingServicePage = (): JSX.Element => {
   
   const handleBlogsClick = () => {
     navigate('/blogs');
+  };
+
+  // Check if form is valid
+  const isFormValid = assignment.trim() !== '' && instructions.trim() !== '';
+
+  // Submit form data to external application
+  const submitToExternalApp = (formData) => {
+    // Create a hidden form element
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = 'https://v0-newnow21.vercel.app/marking-services';
+    form.style.display = 'none';
+
+    // Add each piece of data as a hidden input
+    Object.keys(formData).forEach(key => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = key;
+      input.value = formData[key];
+      form.appendChild(input);
+    });
+
+    // Append form to body, submit, then remove
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
+  };
+
+  // Check for returning user and restore form data
+  useEffect(() => {
+    const savedFormData = localStorage.getItem('markingServiceFormData');
+    const authSuccess = localStorage.getItem('authSuccess');
+    const redirectUrl = localStorage.getItem('redirectAfterAuth');
+    
+    // If user just completed auth and we have a redirect URL
+    if (authSuccess === 'true' && redirectUrl) {
+      localStorage.removeItem('authSuccess');
+      localStorage.removeItem('redirectAfterAuth');
+      localStorage.removeItem('markingServiceFormData');
+      window.open(redirectUrl, '_blank');
+      return;
+    }
+    
+    // Restore form data if available and not too old (1 hour)
+    if (savedFormData) {
+      try {
+        const data = JSON.parse(savedFormData);
+        const isRecent = Date.now() - data.timestamp < 3600000; // 1 hour
+        
+        if (isRecent) {
+          setAssignment(data.assignment || '');
+          setInstructions(data.instructions || '');
+        } else {
+          // Clean up old data
+          localStorage.removeItem('markingServiceFormData');
+        }
+      } catch (error) {
+        console.error('Error parsing saved form data:', error);
+        localStorage.removeItem('markingServiceFormData');
+      }
+    }
+  }, []);
+
+  // Handle Next button click
+  const handleNextClick = () => {
+    if (isFormValid) {
+      // Prepare the data to send to the external application
+      const formData = {
+        assignmentText: assignment.trim(),
+        instructionsText: instructions.trim(),
+        timestamp: Date.now(),
+        source: 'mystudypal-marketing-site'
+      };
+      
+      // Submit to external application
+      submitToExternalApp(formData);
+    }
   };
 
   const steps = [
@@ -155,11 +236,20 @@ export const MarkingServicePage = (): JSX.Element => {
             {/* Form */}
             <div className="space-y-6 md:space-y-8">
               <div>
-                <label className="block text-gray-700 font-medium mb-2">Assignments</label>
+                <label className="block text-gray-700 font-medium mb-2">
+                  Assignments <span className="text-red-500">*</span>
+                </label>
                 <Textarea 
+                  value={assignment}
+                  onChange={(e) => setAssignment(e.target.value)}
                   placeholder="Write text here ..."
-                  className="w-full h-32 p-4 border border-gray-200 rounded-lg"
+                  className={`w-full h-32 p-4 border rounded-lg ${
+                    assignment.trim() === '' ? 'border-red-300 focus:border-red-500' : 'border-gray-200'
+                  }`}
                 />
+                {assignment.trim() === '' && (
+                  <p className="text-red-500 text-sm mt-1">Assignment text is required</p>
+                )}
                 <Button variant="outline" className="mt-4 flex items-center gap-2">
                   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M17.5 12.5V15.8333C17.5 16.2754 17.3244 16.6993 17.0118 17.0118C16.6993 17.3244 16.2754 17.5 15.8333 17.5H4.16667C3.72464 17.5 3.30072 17.3244 2.98816 17.0118C2.67559 16.6993 2.5 16.2754 2.5 15.8333V12.5M5.83333 8.33333L10 12.5M10 12.5L14.1667 8.33333M10 12.5V2.5" stroke="currentColor" strokeWidth="1.67" strokeLinecap="round" strokeLinejoin="round"/>
@@ -169,11 +259,20 @@ export const MarkingServicePage = (): JSX.Element => {
               </div>
 
               <div>
-                <label className="block text-gray-700 font-medium mb-2">Assignment Instructions</label>
+                <label className="block text-gray-700 font-medium mb-2">
+                  Assignment Instructions <span className="text-red-500">*</span>
+                </label>
                 <Textarea 
+                  value={instructions}
+                  onChange={(e) => setInstructions(e.target.value)}
                   placeholder="Write text here ..."
-                  className="w-full h-32 p-4 border border-gray-200 rounded-lg"
+                  className={`w-full h-32 p-4 border rounded-lg ${
+                    instructions.trim() === '' ? 'border-red-300 focus:border-red-500' : 'border-gray-200'
+                  }`}
                 />
+                {instructions.trim() === '' && (
+                  <p className="text-red-500 text-sm mt-1">Assignment instructions are required</p>
+                )}
                 <Button variant="outline" className="mt-4 flex items-center gap-2">
                   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M17.5 12.5V15.8333C17.5 16.2754 17.3244 16.6993 17.0118 17.0118C16.6993 17.3244 16.2754 17.5 15.8333 17.5H4.16667C3.72464 17.5 3.30072 17.3244 2.98816 17.0118C2.67559 16.6993 2.5 16.2754 2.5 15.8333V12.5M5.83333 8.33333L10 12.5M10 12.5L14.1667 8.33333M10 12.5V2.5" stroke="currentColor" strokeWidth="1.67" strokeLinecap="round" strokeLinejoin="round"/>
@@ -182,9 +281,22 @@ export const MarkingServicePage = (): JSX.Element => {
                 </Button>
               </div>
 
-              <Button className="w-full bg-primary-500 hover:bg-primary-600 text-white py-3">
+              <Button 
+                onClick={handleNextClick}
+                disabled={!isFormValid}
+                className={`w-full py-3 transition-all duration-200 ${
+                  isFormValid 
+                    ? 'bg-primary-500 hover:bg-primary-600 text-white cursor-pointer' 
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
+              >
                 Next
               </Button>
+              {!isFormValid && (
+                <p className="text-red-500 text-sm text-center mt-2">
+                  Please fill in both fields to continue
+                </p>
+              )}
             </div>
           </div>
         </div>
